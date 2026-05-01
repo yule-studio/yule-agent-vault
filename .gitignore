@@ -1,9 +1,17 @@
+# Obsidian local workspace state
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .obsidian/cache/
+
+# Obsidian trash
 .trash/
+
+# OS
 .DS_Store
 
+# Private notes
 private/
 secrets/
+
+# Environment variables
 *.env
