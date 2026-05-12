@@ -13,7 +13,7 @@
 | backend | [[backend/]] | api-design / architecture / database / java / jpa / mybatis / redis / spring |
 | devops | [[devops/]] | (운영 / 인프라 / CI / CD) |
 | frontend | [[frontend/]] | (UI / 상태 관리 / 빌드 도구) |
-| computer-science | [[computer-science/]] | (CS 기초 / 알고리즘 / 시스템) |
+| computer-science | [[computer-science/computer-science]] | algorithm / data-structure / database / network / OS / software-engineering — 사전형 (이코테 기반) |
 | career | [[career/]] | certificates / company-research / interview / portfolio / resume |
 
 ## 파일명 컨벤션

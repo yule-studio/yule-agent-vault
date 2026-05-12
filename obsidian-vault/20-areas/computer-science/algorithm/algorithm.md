@@ -23,7 +23,7 @@ tags:
 > 의사 코드 → Python / Java / C++ / C 구현 → 대표 문제 → 안티패턴 → 학습
 > 자료** 9 섹션 구조.
 
-**[[../computer-science|↑ computer-science]]**
+**[[../computer-science/computer-science|↑ computer-science]]** · **[[../../areas|↑↑ 20-areas]]**
 
 ## PART 01 — 코딩 테스트, 무엇을 어떻게 준비할까?
 
