@@ -1,48 +1,48 @@
 ---
-title: "quick-notes — 떠오른 아이디어 / 메모"
+title: "quick-notes — 아이디어 메모"
 kind: knowledge
 project: agent-inbox
 agent: engineering-agent/tech-lead
 status: current
-created_at: 2026-05-12T18:30:00+09:00
+created_at: 2026-05-12T23:30:00+09:00
 tags:
   - inbox
   - quick-notes
   - ideas
 ---
 
-# quick-notes — 떠오른 아이디어 / 메모
+# quick-notes — 아이디어 메모
 
 | 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
 | --- | --- | --- | --- |
-| v.1.0.0 | 2026-05-12 | engineering-agent/tech-lead | 최초 10 아이디어 |
+| v.2.0.0 | 2026-05-12 | engineering-agent/tech-lead | 2 sub-folder 분리 (project / tech-ops) |
+| v.1.0.0 | 2026-05-12 | engineering-agent/tech-lead | 최초 — 단일 폴더 |
 
 **[[../inbox|↑ 00-inbox/]]**
 
-## 이 폴더가 묶는 것
+## 두 종류
 
-운영자 / 자동화 에이전트가 작업하다 떠올린 **아이디어 / 후속 작업 후보**.
-공식 결정이나 작업 로그 전 단계 — 채택되면 `_moc/` 또는 `task-logs/`
-로 이주.
+아이디어는 명확히 다른 두 종류로 분리:
 
-## 현재 아이디어 (10)
+| 종류 | 진입점 | 목표 | 노트 수 |
+| --- | --- | --- | --- |
+| 💡 프로젝트 아이디어 | [[project-ideas/project-ideas]] | **수익화 가능한 개인 SaaS / 서비스** (실제 레퍼런스 + 수익 모델 + 한국 시장 변형) | 20 |
+| 🛠 운영/기술 노하우 | [[tech-ops-ideas/tech-ops-ideas]] | **yule-studio-agent 운영 개선** (PR 자동화 / 그래프 클러스터링 / cost tracker 등) | 10 |
 
-- [[idea-pr-auto-label-by-scope]] — PR 라벨 자동 부착 (scope 기반)
-- [[idea-vault-graph-clustering]] — Obsidian 그래프 hub 별 색 자동
-- [[idea-cost-tracker-per-cycle]] — 사이클 별 token/cost/latency 누적
-- [[idea-discord-status-board]] — `#봇-상태` rich embed 매시간
-- [[idea-mistake-ledger-dashboard]] — mistake 빈도 top 10 시각화
-- [[idea-vault-search-cli]] — `yule vault search` 전 vault 검색
-- [[idea-skill-codegen-from-prompts]] — 프롬프트 → Python skill codegen
-- [[idea-cron-mvp-tasks]] — `yule cron` 정기 작업 단일 진입점
-- [[idea-notion-incremental-sync]] — Notion incremental sync
-- [[idea-agent-self-improvement-loop]] — agent prompt 자동 개선 loop
+## 왜 분리하나
+
+- **목표가 다름** — 프로젝트 = 수익, 운영 = 효율.
+- **검토 주기가 다름** — 프로젝트는 분기/연 단위 시도, 운영은 사이클마다.
+- **레퍼런스 종류가 다름** — 프로젝트는 인디 해커 / Levels.io / Indie Hackers,
+  운영은 본 레포 코드 / 정책 문서.
 
 ## 운영 규칙
 
-1. **아이디어 ≠ 결정**. 본 폴더에 노트가 있다고 즉시 채택되는 것은 아님.
-2. 채택 결정은 `decisions/` 에 별도 노트 + 본 노트의 status `adopted`
-   갱신.
-3. 채택 안 됨 (rejected) 도 status 갱신 + 이유 본문 추가.
-4. 1 개월 이상 unclaimed 아이디어는 `90-archive/deprecated-notes/` 로
-   이주 검토.
+1. 새 아이디어 추가 시 둘 중 어디 가는지 먼저 결정 (수익화 vs 운영).
+2. 채택되면 각 sub-folder 의 운영 규칙대로 status 갱신 + 다른 폴더로 이주.
+3. 1 개월 unclaimed 아이디어는 `90-archive/deprecated-notes/` 검토.
+
+## 관련
+
+- [[../inbox|↑ 00-inbox 인덱스]]
+- [[../../links/general/communities|→ communities]] — 인디 해커 / 운영 커뮤니티
