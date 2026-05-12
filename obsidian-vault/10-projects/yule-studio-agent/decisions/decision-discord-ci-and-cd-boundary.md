@@ -7,8 +7,8 @@ created_at: 2026-05-09T00:00:00+09:00
 agent: engineering-agent/tech-lead
 status: decided
 related:
-  - ../research/2026-05-09_research_discord-ci-strategy.md
-  - ../task-logs/2026-05-09_task-log_discord-ci-design.md
+  - ../research/research-discord-ci-strategy.md
+  - ../task-logs/task-log-discord-ci-design.md
 tags:
   - decision
   - ci
@@ -118,5 +118,5 @@ push-only 는 단순하지만 PR 중심 운영과 맞지 않는다. 같은 브�
 ## 관련 문서
 
 - [[CLAUDE]]
-- [[2026-05-09_research_discord-ci-strategy]]
-- [[2026-05-09_task-log_discord-ci-design]]
+- [[research-discord-ci-strategy]]
+- [[task-log-discord-ci-design]]

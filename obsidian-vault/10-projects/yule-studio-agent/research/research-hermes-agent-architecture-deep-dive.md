@@ -19,11 +19,12 @@ sources:
   - https://raw.githubusercontent.com/NousResearch/hermes-agent/main/agent/context_compressor.py
   - https://raw.githubusercontent.com/NousResearch/hermes-agent/main/agent/insights.py
   - https://raw.githubusercontent.com/NousResearch/hermes-agent/main/cron/scheduler.py
+agent: engineering-agent/tech-lead
 ---
 
 # Hermes Agent 구조 분석 — Yule 비교 deep-dive
 
-본 노트는 Hermes Agent (NousResearch/hermes-agent) 의 8 개 영역을 코드 차원에서 들여다보고, 각 영역별로 Yule Studio Agent 의 현재 구현과 어떻게 다른지 정리한다. 이후 작성되는 [decision note](../decisions/2026-05-08_hermes-yule-integration-decisions.md) 에서 도입/보류 결정의 근거 역할을 한다.
+본 노트는 Hermes Agent (NousResearch/hermes-agent) 의 8 개 영역을 코드 차원에서 들여다보고, 각 영역별로 Yule Studio Agent 의 현재 구현과 어떻게 다른지 정리한다. 이후 작성되는 [decision note](../decisions/decision-hermes-yule-integration.md) 에서 도입/보류 결정의 근거 역할을 한다.
 
 ## 목표
 

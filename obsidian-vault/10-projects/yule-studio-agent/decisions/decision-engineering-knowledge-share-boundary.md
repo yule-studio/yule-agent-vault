@@ -7,8 +7,8 @@ created_at: 2026-05-10T00:00:00+09:00
 agent: engineering-agent/tech-lead
 status: decided
 related:
-  - ../research/2026-05-10_research_engineering-knowledge-surface-strengthening.md
-  - ../task-logs/2026-05-10_task-log_company-runtime-knowledge-surface.md
+  - ../research/research-engineering-knowledge-surface-strengthening.md
+  - ../task-logs/task-log-company-runtime-knowledge-surface.md
 tags:
   - decision
   - engineering-intelligence

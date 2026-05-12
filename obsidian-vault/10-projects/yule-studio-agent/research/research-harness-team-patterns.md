@@ -8,6 +8,8 @@ collected_at: "2026-05-08"
 author: engineering-agent/tech-lead
 status: research
 contract: research/v0
+agent: engineering-agent/tech-lead
+created_at: 2026-05-08T00:00:00+09:00
 ---
 
 # Harness 6 팀 아키텍처 패턴 매핑 — Yule engineering-agent 연구 노트
@@ -74,9 +76,9 @@ Harness 의 팀 아키텍처 팩토리 관점과 6 가지 팀 패턴 (Pipeline /
 - **정책 문서**: `policies/runtime/agents/engineering-agent/team-architecture-patterns.md` (신규).
 - **smoke 테스트**: `tests/engineering/test_team_architecture_patterns_doc.py` (정책 문서 존재 + 11 섹션 + 6 패턴 keyword + tech-lead 단일 write subject + main/release/force push 안전 rail).
 - **vault 노트 3 종**:
-  - `10-projects/yule-studio-agent/research/2026-05-08_research-harness-team-patterns.md` (본 파일).
-  - `10-projects/yule-studio-agent/decisions/2026-05-08_decision-tech-lead-single-write-subject.md`.
-  - `10-projects/yule-studio-agent/task-logs/2026-05-08_task-log-issue-48-harness.md`.
+  - `10-projects/yule-studio-agent/research/research-harness-team-patterns.md` (본 파일).
+  - `10-projects/yule-studio-agent/decisions/decision-tech-lead-single-write-subject-issue-48.md`.
+  - `10-projects/yule-studio-agent/task-logs/task-log-harness-issue-48.md`.
 - **연관 surface 변경 0** — 코드 / 회귀 / 인덱스 변경 없음. 본 이슈는 정책 + 노트 + 테스트 + draft PR 까지가 deliverables 의 전부.
 
 ## 리스크 / 다음 액션

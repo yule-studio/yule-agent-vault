@@ -6,14 +6,15 @@ project: yule-studio-agent
 created_at: 2026-05-10T00:00:00+09:00
 agent: engineering-agent/tech-lead
 related:
-  - ../decisions/2026-05-10_decision_engineering-knowledge-share-boundary.md
-  - ../task-logs/2026-05-10_task-log_company-runtime-knowledge-surface.md
+  - ../decisions/decision-engineering-knowledge-share-boundary.md
+  - ../task-logs/task-log-company-runtime-knowledge-surface.md
 tags:
   - research
   - engineering-intelligence
   - knowledge-surface
   - share-scope
   - retrieval
+status: historical
 ---
 
 # 목표

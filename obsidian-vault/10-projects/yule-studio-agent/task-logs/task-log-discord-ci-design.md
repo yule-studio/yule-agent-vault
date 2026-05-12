@@ -110,5 +110,5 @@ python3 -m unittest discover -s tests -t .
 ## 관련 문서
 
 - [[CLAUDE]]
-- [[2026-05-09_research_discord-ci-strategy]]
-- [[2026-05-09_decision_discord-ci-and-cd-boundary]]
+- [[research-discord-ci-strategy]]
+- [[decision-discord-ci-and-cd-boundary]]

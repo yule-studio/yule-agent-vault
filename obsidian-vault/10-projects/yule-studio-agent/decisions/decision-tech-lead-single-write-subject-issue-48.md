@@ -8,6 +8,8 @@ decided_at: "2026-05-08"
 author: engineering-agent/tech-lead
 status: decided
 contract: decision/v0
+agent: engineering-agent/tech-lead
+created_at: 2026-05-08T00:00:00+09:00
 ---
 
 # 결정 — engineering-agent 의 외부 write 주체는 tech-lead 1 명으로 단일화

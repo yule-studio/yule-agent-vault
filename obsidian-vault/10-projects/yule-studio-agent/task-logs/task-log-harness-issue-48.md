@@ -9,6 +9,8 @@ started_at: "2026-05-08"
 author: engineering-agent/tech-lead
 status: in_progress
 contract: task-log/v0
+agent: engineering-agent/tech-lead
+created_at: 2026-05-08T00:00:00+09:00
 ---
 
 # task-log — issue #48 Harness 팀 아키텍처 도입
@@ -42,9 +44,9 @@ issue #48 의 Harness 팀 아키텍처 팩토리 관점을 정리해, Yule engin
 | --- | --- | --- |
 | 1 | 정책 문서 — 6 패턴 매핑 + gateway 책임 + 역할 분리 + orchestration contract + skill disclosure + evolution loop + SPOF + next action | `policies/runtime/agents/engineering-agent/team-architecture-patterns.md` |
 | 2 | smoke 테스트 — 정책 문서의 11 섹션 + 6 패턴 keyword + tech-lead 단일 write subject + safety rail 핵심 문구 | `tests/engineering/test_team_architecture_patterns_doc.py` |
-| 3 | research note (본 작업의 근거 자료) | `10-projects/yule-studio-agent/research/2026-05-08_research-harness-team-patterns.md` |
-| 4 | decision note (tech-lead 단일 write 주체 결정) | `10-projects/yule-studio-agent/decisions/2026-05-08_decision-tech-lead-single-write-subject.md` |
-| 5 | task-log note (본 파일) | `10-projects/yule-studio-agent/task-logs/2026-05-08_task-log-issue-48-harness.md` |
+| 3 | research note (본 작업의 근거 자료) | `10-projects/yule-studio-agent/research/research-harness-team-patterns.md` |
+| 4 | decision note (tech-lead 단일 write 주체 결정) | `10-projects/yule-studio-agent/decisions/decision-tech-lead-single-write-subject-issue-48.md` |
+| 5 | task-log note (본 파일) | `10-projects/yule-studio-agent/task-logs/task-log-harness-issue-48.md` |
 | 6 | issue #48 kickoff comment | https://github.com/yule-studio/yule-studio-agent/issues/48#issuecomment-4404823515 |
 | 7 | (예정) issue #48 progress comment + draft PR | 본 task 종료 직전 |
 

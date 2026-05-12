@@ -11,13 +11,14 @@ branch: feature/company-runtime-knowledge-surface
 worktree: /Users/masterway/local-dev/yule-studio-agent-worktrees/company-runtime-knowledge-surface
 mode: tech-lead-mediated (engineering_intelligence note/report formatting)
 related:
-  - ../decisions/2026-05-10_decision_engineering-knowledge-share-boundary.md
-  - ../research/2026-05-10_research_engineering-knowledge-surface-strengthening.md
+  - ../decisions/decision-engineering-knowledge-share-boundary.md
+  - ../research/research-engineering-knowledge-surface-strengthening.md
 tags:
   - task-log
   - engineering-intelligence
   - knowledge-surface
   - share-scope
+agent: engineering-agent/tech-lead
 ---
 
 # 목표
@@ -71,7 +72,7 @@ tags:
 
 # 결정/설계
 
-[[2026-05-10_decision_engineering-knowledge-share-boundary]] 참고. 핵심: share_scope 는 enum 으로 contract 에 박는다. 외부 surface 가 직접 raw `to_payload()` 를 들고 가지 않고 `shareable_external_payload(item)` 만 사용하게 만들어, 운영자 합의가 코드 보호로 승격된다.
+[[decision-engineering-knowledge-share-boundary]] 참고. 핵심: share_scope 는 enum 으로 contract 에 박는다. 외부 surface 가 직접 raw `to_payload()` 를 들고 가지 않고 `shareable_external_payload(item)` 만 사용하게 만들어, 운영자 합의가 코드 보호로 승격된다.
 
 # 검증
 

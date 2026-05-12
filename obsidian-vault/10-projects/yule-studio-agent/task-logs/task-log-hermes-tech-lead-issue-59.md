@@ -10,6 +10,7 @@ external_reference: https://github.com/NousResearch/hermes-agent
 actor_role: engineering-agent/tech-lead
 status: phase_1_completed
 created_at: 2026-05-08
+agent: engineering-agent/tech-lead
 ---
 
 # Hermes Agent → Yule Studio Agent 흡수 분석 (issue #59) — task-log

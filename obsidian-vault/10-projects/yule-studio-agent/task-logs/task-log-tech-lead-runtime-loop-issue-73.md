@@ -11,11 +11,12 @@ branch: feature/tech-lead-runtime-loop
 worktree: /Users/masterway/local-dev/yule-studio-agent-worktrees/issue-73-tech-lead-runtime
 mode: tech-lead-mediated (다역할 통합 결정 layer)
 tags: [task-log, tech-lead-runtime, foundation]
+agent: engineering-agent/tech-lead
 ---
 
 # 목표
 
-4 단계 (coding executor / completion hook + selector / decision layer / 검증) 를 단일 PR foundation 까지 land. 자세한 결정은 [[2026-05-09_issue-73-decision-tech-lead-runtime-loop]], 분석은 [[2026-05-09_issue-73-research-tech-lead-runtime-loop]].
+4 단계 (coding executor / completion hook + selector / decision layer / 검증) 를 단일 PR foundation 까지 land. 자세한 결정은 [[task-log-tech-lead-runtime-loop-issue-73]], 분석은 [[task-log-tech-lead-runtime-loop-issue-73]].
 
 # 현재 Yule 기준선
 
@@ -60,7 +61,7 @@ tags: [task-log, tech-lead-runtime, foundation]
 
 # 도입 / 보류 / 비도입
 
-[[2026-05-09_issue-73-decision-tech-lead-runtime-loop]] 의 12 결정 (D-73-1 ~ D-73-12) 그대로.
+[[task-log-tech-lead-runtime-loop-issue-73]] 의 12 결정 (D-73-1 ~ D-73-12) 그대로.
 
 후속 PR 분리: live executor 호출 / runtime up auto-spawn / Discord blocked 통지 / 실 GitHub state query / 실 Claude classifier / autonomy_policy hook.
 
@@ -140,10 +141,10 @@ tags: [task-log, tech-lead-runtime, foundation]
 ## 관련 문서
 
 - [[CLAUDE]]
-- [[2026-05-09_issue-73-research-tech-lead-runtime-loop]]
-- [[2026-05-09_issue-73-decision-tech-lead-runtime-loop]]
-- [[2026-05-08_issue-69-research-engineering-agent-governance-synthesis]]
-- [[2026-05-08_issue-69-decision-engineering-agent-authoring-policy]]
+- [[task-log-tech-lead-runtime-loop-issue-73]]
+- [[task-log-tech-lead-runtime-loop-issue-73]]
+- [[decision-engineering-knowledge-share-boundary]]
+- [[decision-engineering-knowledge-share-boundary]]
 
 # Round 3 — 종료 시점 갱신 (2026-05-09)
 

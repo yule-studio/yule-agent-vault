@@ -7,16 +7,17 @@ session_id: issue-59
 issue_number: 59
 issue_url: https://github.com/yule-studio/yule-studio-agent/issues/59
 external_reference: https://github.com/NousResearch/hermes-agent
-related_research: 10-projects/yule-studio-agent/research/2026-05-08_hermes-agent-architecture-deep-dive.md
-related_task_log: 10-projects/yule-studio-agent/task-logs/2026-05-08_59-hermes-tech-lead.md
+related_research: 10-projects/yule-studio-agent/research/research-hermes-agent-architecture-deep-dive.md
+related_task_log: 10-projects/yule-studio-agent/task-logs/task-log-hermes-tech-lead-issue-59.md
 actor_role: engineering-agent/tech-lead
 status: decided
 created_at: 2026-05-08
+agent: engineering-agent/tech-lead
 ---
 
 # Hermes Agent → Yule 흡수 결정 (issue #59)
 
-본 결정 노트는 [Hermes architecture deep-dive](../research/2026-05-08_hermes-agent-architecture-deep-dive.md) 결과를 받아 **Yule 에 무엇을, 어디에, 왜 도입하는지** 를 단일 source of truth 로 정한다. 이후 작성되는 정책 5 종 문서가 본 결정의 구현물이다.
+본 결정 노트는 [Hermes architecture deep-dive](../research/research-hermes-agent-architecture-deep-dive.md) 결과를 받아 **Yule 에 무엇을, 어디에, 왜 도입하는지** 를 단일 source of truth 로 정한다. 이후 작성되는 정책 5 종 문서가 본 결정의 구현물이다.
 
 ## 목표
 

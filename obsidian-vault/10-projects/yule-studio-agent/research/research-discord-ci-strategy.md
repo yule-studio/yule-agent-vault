@@ -11,6 +11,7 @@ tags:
   - discord
   - github-actions
   - automation
+status: historical
 ---
 
 # 목표
@@ -188,5 +189,5 @@ workflow 파일명은 `.github/workflows/ci.yml` 이 가장 명확하다.
 ## 관련 문서
 
 - [[CLAUDE]]
-- [[2026-05-09_decision_discord-ci-and-cd-boundary]]
-- [[2026-05-09_task-log_discord-ci-design]]
+- [[decision-discord-ci-and-cd-boundary]]
+- [[task-log-discord-ci-design]]
