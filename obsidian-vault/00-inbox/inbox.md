@@ -1,15 +1,31 @@
-# 00-inbox/ — 분류 전 임시
+---
+title: "00-inbox — 분류 전 임시"
+kind: knowledge
+project: agent-inbox
+agent: engineering-agent/tech-lead
+status: current
+created_at: 2026-05-12T18:30:00+09:00
+tags:
+  - inbox
+  - index
+---
 
-> 어디에 둘지 모르는 노트의 첫 도착지. 정기적으로 비우고 적절한 폴더로
-> 이주시킨다.
+# 00-inbox — 분류 전 임시
 
-**[[../index|↑ vault 인덱스]]**
+| 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
+| --- | --- | --- | --- |
+| v.2.0.0 | 2026-05-12 | engineering-agent/tech-lead | 3 하위 영역 실제 노트로 채움 (links 17 / quick-notes 10 / unsorted 10) |
+| v.1.0.0 | 2026-05-12 | engineering-agent/tech-lead | 최초 — 빈 골격 |
+
+**[[../index|↑ obsidian-vault 인덱스]]**
 
 ## 하위 영역
 
-- [[links/|links/]] — 외부 URL 빠른 저장 (나중에 30-resources 로 이주)
-- [[quick-notes/|quick-notes/]] — 떠오른 아이디어 / 메모
-- [[unsorted/|unsorted/]] — 분류 미정 노트
+| 영역 | 진입점 | 현재 노트 |
+| --- | --- | --- |
+| links | [[links/links]] | 4 부서 (engineering 7 / product 3 / marketing 4) + general 4 → 17 reference 카탈로그 + 부서 인덱스 4 |
+| quick-notes | [[quick-notes/quick-notes]] | 10 아이디어 (PR 자동 라벨 / 그래프 클러스터링 / cost tracker / 등) |
+| unsorted | [[unsorted/unsorted]] | 10 노트 (관찰 3 / 후속 5 / 메타 2) |
 
 ## 운영 규칙
 
@@ -21,8 +37,10 @@
    - 코드 조각 → `50-snippets/<lang>/`
    - 프로젝트 관련 → `10-projects/<project>/`
    - 더 안 볼 노트 → `90-archive/`
-3. **메타데이터 약식 OK**. inbox 단계에서는 frontmatter / 컨벤션
-   엄격 적용 안 함. 분류 시점에 정식 컨벤션으로 변환.
+3. **메타데이터 약식 OK**. inbox 단계에서는 frontmatter / 컨벤션 엄격
+   적용 안 함. 분류 시점에 정식 컨벤션으로 변환.
+4. `links/` 는 예외 — 영구 reference 카탈로그라 inbox 에 있어도 갱신
+   계속.
 
 ## 자동화 에이전트 진입
 
@@ -32,5 +50,5 @@
 
 ## 관련
 
-- [[../index|↑ vault 인덱스]]
-- [[../CLAUDE|운영 규칙]]
+- [[../index|↑ obsidian-vault 인덱스]]
+- [[../../CLAUDE|운영 규칙 (CLAUDE.md)]]
