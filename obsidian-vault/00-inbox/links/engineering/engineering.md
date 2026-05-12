@@ -31,6 +31,7 @@ tags:
 | devops | [[devops]] | Docker / K8s / CI/CD / 관측 / 시크릿 |
 | qa | [[qa]] | 테스트 전략 / contract test / 회귀 |
 | product-designer | [[product-designer]] | UI/UX / 디자인 시스템 / 사용자 흐름 |
+| android | [[android]] | Kotlin / Jetpack Compose / 아키텍처 / KMP |
 
 ## 운영 규칙
 
