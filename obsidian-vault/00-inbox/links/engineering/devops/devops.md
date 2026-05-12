@@ -35,6 +35,7 @@ tags:
 | AWS | [[cloud-aws]] | EC2 / S3 / RDS / EKS / Lambda |
 | GCP | [[cloud-gcp]] | GCE / GCS / GKE / Cloud Run |
 | Azure | [[cloud-azure]] | AKS / Functions / Cosmos DB |
+| OCI | [[cloud-oci]] | OCI / OKE / Autonomous DB / Always Free |
 | SRE / Incident response | [[sre-incident]] | Google SRE / postmortem / runbook |
 | 인프라 보안 | [[security-devops]] | IAM / Vault / 네트워크 / WAF |
 | Linux / 시스템 | [[linux-systems]] | systemd / 네트워킹 / 성능 |
