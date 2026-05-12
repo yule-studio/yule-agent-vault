@@ -85,11 +85,18 @@ function ALGO(input):
     ...
 ```
 
-## 6. 언어별 구현
-### Python
+## 6. 언어별 구현 (코테 가능 11 언어)
+### Python (Python 3)
 ### Java
 ### C++
 ### C
+### JavaScript (Node.js)
+### TypeScript
+### Kotlin
+### Swift
+### Go
+### Rust
+### C#
 
 ## 7. 변형 / 응용
 - 비슷한 문제 유형 / 변형
