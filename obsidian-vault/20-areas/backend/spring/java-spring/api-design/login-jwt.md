@@ -22,6 +22,9 @@ tags:
 
 **[[api-design|↑ api-design hub]]**
 
+> 📐 **ORM**: §6 의 영속 코드는 **JPA Adapter sketch (기본)**. 3 모드 정책: [[api-design#0.5 ORM 정책]].
+> 다른 ORM 변형 본거지 — JPA: [[../database/jpa#11.5.2]] · MyBatis: [[../database/mybatis#10.5.2]] · 공존: [[../database/jpa-mybatis-coexist#9.5.2]]
+
 > 전제: [[signup]] 으로 `users` 테이블 + `Argon2PasswordEncoder` 존재.
 
 ---

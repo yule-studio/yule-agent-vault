@@ -22,6 +22,9 @@ tags:
 
 **[[api-design|↑ api-design hub]]**
 
+> 📐 **ORM**: §6 의 영속 코드는 **JPA Adapter sketch (기본)**. 3 모드 정책: [[api-design#0.5 ORM 정책]].
+> 다른 ORM 변형 본거지 — JPA: [[../database/jpa#11.5.1]] · MyBatis: [[../database/mybatis#10.5.1]] · 공존: [[../database/jpa-mybatis-coexist#9.5.1]]
+
 ---
 
 ## 1. 무엇을 만드는가
@@ -958,6 +961,7 @@ SMTP 5초 지연 = 트랜잭션 5초. 외부 호출은 **AFTER_COMMIT**.
 - [[login-jwt]] — 가입 후 로그인
 - [[password-reset]] — 잊은 패스워드
 - email-verification (다음) — outbox + verify endpoint
+- **ORM 본거지** — [[../database/jpa#11.5.1|↗ JPA]] · [[../database/mybatis#10.5.1|↗ MyBatis]] · [[../database/jpa-mybatis-coexist#9.5.1|↗ 공존]]
 - [[../../../../database/postgresql/security|↗ PG 보안]]
 - [[../../../../security/security|↗ security hub]]
 - [[api-design|↑ api-design hub]]
