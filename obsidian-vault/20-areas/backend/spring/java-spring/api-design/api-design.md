@@ -1,0 +1,289 @@
+---
+title: "Java Spring — API 구현 레시피 Hub"
+kind: knowledge
+project: backend
+agent: engineering-agent/tech-lead
+status: current
+created_at: 2026-05-14T10:00:00+09:00
+tags:
+  - backend
+  - java-spring
+  - api-design
+  - recipe
+  - hub
+---
+
+# Java Spring — API 구현 레시피 Hub
+
+| 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
+| --- | --- | --- | --- |
+| v.1.0.0 | 2026-05-14 | engineering-agent/tech-lead | hub + Tier 1 (auth) 3개 레시피 — Java 21 + Spring Boot 3 |
+
+**[[../java-spring|↑ Java Spring]]** · **[[../../spring|↑ Spring hub]]**
+
+> 이 폴더는 **Java + Spring Boot 3** 기준으로 실전 프로젝트에 반복 등장하는 API 기능들의 구현 레시피.
+> 각 레시피는 **OOP 설계 → DB 선택 → 보안/암호화 → 코드 → 테스트 → 운영 체크리스트** 구조.
+> "이 문서만 보고 현장에서 바로 구현" 을 목표.
+>
+> Kotlin 변형은 [[../../kotlin-spring/kotlin-spring|↗ kotlin-spring]] 에 추후 누적. 본 hub 는 Java 전용.
+
+---
+
+## 0. 표준 스택
+
+| 영역 | 버전 / 라이브러리 |
+| --- | --- |
+| Java | **21 LTS** |
+| Spring Boot | **3.3.x** |
+| Build | Gradle (Kotlin DSL) 또는 Maven |
+| DB | PostgreSQL 16 + Spring Data JPA / Hibernate 6 |
+| 마이그레이션 | Flyway |
+| Security | Spring Security 6 + jjwt 0.12 |
+| Cache / Redis | Spring Data Redis + Redisson |
+| 테스트 | JUnit 5 + Mockito + Testcontainers |
+
+```kotlin
+// build.gradle.kts (공통 베이스)
+plugins {
+    java
+    id("org.springframework.boot") version "3.3.0"
+    id("io.spring.dependency-management") version "1.1.5"
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-database-postgresql")
+
+    runtimeOnly("org.postgresql:postgresql")
+
+    // 보안 / 암호화
+    implementation("com.password4j:password4j:1.8.2")
+    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
+    // 유틸 / 외부
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
+    implementation("software.amazon.awssdk:s3:2.25.50")
+    implementation("org.redisson:redisson-spring-boot-starter:3.27.2")
+    implementation("io.azam.ulidj:ulidj:5.2.3")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.testcontainers:junit-jupiter:1.19.7")
+    testImplementation("org.testcontainers:postgresql:1.19.7")
+}
+```
+
+---
+
+## 1. 각 레시피의 표준 목차
+
+| 섹션 | 내용 |
+| --- | --- |
+| 1. 무엇을 만드는가 | API 1~2 개 요구사항 + 요청·응답 예시 |
+| 2. 도메인 모델 (OOP) | Aggregate / Entity / Value Object / Domain Event |
+| 3. 아키텍처 / 의존성 흐름 | Controller → UseCase → Repository → External |
+| 4. DB 선택 / 스키마 | RDB vs NoSQL 근거 / 인덱스 / 제약 |
+| 5. 보안 / 암호화 | 알고리즘 선정 / 함정 / OWASP 매핑 |
+| 6. 구현 — Java | DTO (record) / Entity / Repo / Service / Controller / Config |
+| 7. 트랜잭션 / 예외 / 검증 | `@Transactional` 경계 / 예외 매핑 / Bean Validation |
+| 8. 테스트 | 단위 (Mockito) + 통합 (Testcontainers) |
+| 9. 운영 체크리스트 | 배포 / 모니터링 / 함정 |
+| 10. 관련 | 다른 레시피 cross-link |
+
+코드 컨벤션:
+- 코드 블록 시작 시 **파일 경로 주석** — `// src/main/java/.../User.java`
+- `import` 는 생략 (가독성)
+- 패키지는 `com.example.shop` 가정
+- DTO 는 **record** 우선 (Java 14+ 표준 immutable)
+
+---
+
+## 2. Tier 1 — 모든 프로젝트 거의 항상 필요
+
+### 2.1 인증 / 인가
+
+| 레시피 | 노트 | 핵심 |
+| --- | --- | --- |
+| **회원가입** | [[signup\|↗ signup]] | argon2id / email unique / outbox 이메일 인증 |
+| **로그인 (JWT)** | [[login-jwt\|↗ login-jwt]] | access + rotating refresh / 블랙리스트 / Spring Security 필터 |
+| **패스워드 리셋** | [[password-reset\|↗ password-reset]] | 단일 사용 토큰 / 만료 / enumeration 방지 |
+
+---
+
+## 3. Tier 2 — 다음 사이클 (작성 예정)
+
+### 3.1 인증 / 인가
+- **이메일 인증** — verification token / outbox / re-send rate limit
+- **소셜 로그인 (OAuth2)** — `spring-boot-starter-oauth2-client`
+- **2FA / TOTP** — Google Authenticator 호환
+- **RBAC / 권한 모델** — Role + Permission + `@PreAuthorize`
+
+### 3.2 횡단 관심사
+- **페이지네이션·검색·표준 응답** — cursor vs offset / Specification / `@RestControllerAdvice`
+- **Rate limiting** — Bucket4j + Redis
+- **Audit log** — Hibernate Envers / `@CreatedBy`
+
+### 3.3 이커머스 / 트랜잭션
+- **결제 (PG + 멱등성 + Webhook)** — `Idempotency-Key` / state machine / webhook 서명
+- **주문·재고 (동시성)** — 낙관 락 vs 비관 락 / 분산 락
+- **쿠폰 / 할인 / 포인트**
+- **재고 예약 (장바구니 hold)**
+
+### 3.4 캐시 / 성능
+- **Redis 캐시** — cache-aside / `@Cacheable` / stampede 방지
+- **분산 락 (Redisson)**
+- **N+1 회피** — fetch join / `@EntityGraph`
+
+### 3.5 파일 / 미디어
+- **파일 업로드 (S3 presigned)**
+- **이미지 리사이즈 / 썸네일**
+
+### 3.6 비동기 / 메시징
+- **이메일/SMS 발송 (transactional outbox)**
+- **Kafka producer / consumer**
+- **스케줄링** — `@Scheduled` + ShedLock
+
+### 3.7 실시간
+- **WebSocket / STOMP**
+- **SSE**
+
+### 3.8 외부 통합
+- **WebClient + 재시도 / 회로차단** — Resilience4j
+- **Webhook 송신** — 서명 + 재시도
+
+---
+
+## 4. 모든 레시피 공통 원칙
+
+### 4.1 OOP / 도메인 모델링
+
+- **풍부한 도메인 모델 (Rich Domain Model)** — Entity 가 동사. `user.changePassword(...)` 가 `userService.changePassword(user, ...)` 보다 우선.
+- **불변 Value Object (record)** — `Email`, `Money`, `PasswordHash`. 생성 시 검증.
+- **Aggregate 경계** — 트랜잭션 = Aggregate. 간 의존은 ID 참조 + 도메인 이벤트.
+- **Domain Event** — 외부 부수효과 (이메일/Kafka) 는 이벤트로 알리고 Application Layer 가 처리.
+- **헥사고날 (Port & Adapter)** — domain 은 framework 모름. JPA / Spring 의존은 infrastructure.
+
+### 4.2 DB 선택 기본 의사결정
+
+| 시나리오 | 권장 | 이유 |
+| --- | --- | --- |
+| 사용자 / 주문 / 결제 등 도메인 핵심 | **PostgreSQL** | ACID + unique constraint + JSONB |
+| 세션 / 캐시 / 토큰 / 분산 락 | **Redis** | μs / TTL / atomic |
+| 검색 / 자동완성 / 로그 분석 | **Elasticsearch** | 역색인 / 분석기 |
+| 이벤트 / 비동기 / 트래킹 | **Kafka** | append-only / replay |
+| 파일 / 이미지 / 동영상 | **S3** | object store, presigned URL |
+| 시계열 / 메트릭 | **Timescale / Prometheus** | 컬럼 / 압축 |
+
+자세한 비교: [[../../../../database/database|↗ database hub]]
+
+### 4.3 보안 / 암호화 — 외울 만한 기본
+
+| 용도 | 알고리즘 (2026) | 비고 |
+| --- | --- | --- |
+| 패스워드 해시 | **Argon2id** (또는 bcrypt cost 12+) | 단방향. salt 내장 |
+| 토큰 / 세션 ID | `SecureRandom` 32 bytes → Base64URL | 절대 `Random` X |
+| HMAC (webhook 서명) | **HMAC-SHA-256** | 시크릿은 vault |
+| 대칭 (DB 컬럼 암호화) | **AES-256-GCM** | nonce 12 bytes 매번 새로 |
+| 비대칭 (JWT 서명) | **RS256 / ES256** | HS256 은 단일 서비스용 |
+| 데이터 무결성 | **SHA-256** | MD5 / SHA-1 금지 |
+
+> **함정**: SHA-256 / MD5 로 패스워드 해시는 **사고**. 무조건 password-hashing 전용 (Argon2id / bcrypt / scrypt).
+
+상세: [[../../../../security/security|↗ 20-areas/security]]
+
+### 4.4 응답 / 예외 표준
+
+```java
+// Envelope
+public record ApiResponse<T>(T data, ApiError error) {
+    public static <T> ApiResponse<T> ok(T data) { return new ApiResponse<>(data, null); }
+    public static <T> ApiResponse<T> fail(ApiError err) { return new ApiResponse<>(null, err); }
+}
+public record ApiError(String code, String message, Map<String, Object> details) {
+    public ApiError(String code, String message) { this(code, message, null); }
+}
+```
+
+예외는 `@RestControllerAdvice` 한 곳에서 매핑. 상세는 각 레시피 §7.
+
+### 4.5 트랜잭션 경계
+
+- `@Transactional` 은 **Application Service 메서드** 에 (Controller / Repository X)
+- 한 트랜잭션 = **한 Aggregate** 변경 (분산 트랜잭션 회피)
+- 외부 호출 (이메일 / PG / Kafka) 은 **트랜잭션 밖** — outbox 또는 `@TransactionalEventListener(AFTER_COMMIT)`
+
+### 4.6 입력 검증
+
+- DTO 에 `jakarta.validation` 어노테이션 (`@Email`, `@Size`, custom)
+- Controller 에 `@Valid` → `MethodArgumentNotValidException` → `@RestControllerAdvice` 422 매핑
+- **도메인 검증** 은 record compact constructor / Entity 생성 시점에도 (이중 방어)
+
+---
+
+## 5. 추천 패키지 구조
+
+```
+com.example.shop
+├── domain/                     # framework 모름. POJO + 도메인 로직
+│   ├── user/                   # User, Email, PasswordHash, UserRepository (interface)
+│   ├── order/
+│   └── payment/
+├── application/                # UseCase. @Transactional 여기서
+│   ├── user/
+│   └── order/
+├── infrastructure/             # JPA / Redis / S3 / 외부 API. Spring 의존
+│   ├── persistence/jpa/        # *JpaEntity, *JpaRepository
+│   ├── persistence/redis/
+│   ├── external/pg/
+│   └── external/email/
+├── presentation/               # REST controller, DTO (record)
+│   └── api/v1/
+└── config/                     # SecurityConfig, JpaConfig
+```
+
+도메인 → infrastructure 임포트 금지 (의존성 역전). Repository 는 domain interface, JPA 구현은 infrastructure.
+
+---
+
+## 6. 진행 상태
+
+| 레시피 | 상태 |
+| --- | --- |
+| [[signup]] | ✅ Java |
+| [[login-jwt]] | ✅ Java |
+| [[password-reset]] | ✅ Java |
+| email-verification | 🟡 |
+| oauth2-social-login | 🟡 |
+| 2fa-totp | 🟡 |
+| rbac-permissions | 🟡 |
+| pagination-search | 🟡 |
+| payment-pg | 🟡 |
+| order-stock | 🟡 |
+| file-upload-s3 | 🟡 |
+| cache-redis | 🟡 |
+| distributed-lock-redisson | 🟡 |
+| rate-limiting | 🟡 |
+| websocket-stomp | 🟡 |
+| webhook-send | 🟡 |
+| excel-csv-import-export | 🟡 |
+| elasticsearch-integration | 🟡 |
+
+---
+
+## 7. 관련
+
+- [[../java-spring|↑ Java Spring]]
+- [[../../../../database/database|↗ database hub]]
+- [[../../../../security/security|↗ security hub]]
