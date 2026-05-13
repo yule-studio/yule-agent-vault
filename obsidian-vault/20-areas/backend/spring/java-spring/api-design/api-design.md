@@ -87,6 +87,77 @@ dependencies {
 
 ---
 
+## 0.5 ORM 정책 — 3 모드 (JPA only / MyBatis only / 공존)
+
+> **이 vault 의 레시피는 3 ORM 모드 모두 first-class 로 다룬다.**
+
+### 0.5.1 도메인은 ORM 을 모른다 (Port-Adapter)
+
+모든 레시피는 다음 구조:
+
+```
+domain/           ← Aggregate / Value Object / Repository interface (port)
+   ↑ (의존)
+application/      ← UseCase. @Transactional. Repository port 만 사용.
+   ↑ (의존)
+infrastructure/   ← Repository 구현 = JPA Adapter / MyBatis Adapter / 둘 다
+```
+
+→ Application / Domain 코드는 **ORM 바뀌어도 안 변함**. JPA → MyBatis 전환 = infrastructure adapter 만 교체.
+
+### 0.5.2 Recipe 의 §6 "구현" 을 어떻게 읽나
+
+각 recipe 의 §6 는 **JPA Adapter sketch 가 기본** (Java/Spring 진영에서 가장 흔하고, dirty checking / 트랜잭션 안전성 덕에 도메인 CUD 의 사실상 표준).
+
+| 내 프로젝트 모드 | 어떻게 읽나 |
+| --- | --- |
+| **JPA only** | recipe §6 그대로 사용. 추가로 [[../database/jpa]] 의 영속성·N+1·OSIV. |
+| **MyBatis only** | recipe §6 의 도메인 / Application / Controller 까지는 그대로. Repository adapter 는 [[../database/mybatis#7. Recipe 별 적용]] 참고. |
+| **JPA + MyBatis 공존** | recipe §6 의 JPA adapter 는 CUD. 검색/보고서/통계는 [[../database/jpa-mybatis-coexist#8. Recipe 별 분담]] 의 MyBatis Query Repository 추가. |
+
+### 0.5.3 어떤 모드를 언제
+
+| 시나리오 | 권장 모드 |
+| --- | --- |
+| 신규 SaaS / 도메인 풍부 / 작은 팀 | **JPA only** |
+| 거대 레거시 SI / SQL 자산 / OLAP 비중 큼 | **MyBatis only** |
+| **이커머스 / 한국 SaaS 의 흔한 production** | **공존** — JPA (CUD) + MyBatis (검색·통계) |
+| 신규 SaaS 인데 일부 보고서가 너무 복잡 | **공존** (시작은 JPA, 보고서만 MyBatis 추가) |
+
+자세한 결정 트리: [[../database/database#2. 의사결정 트리]].
+
+### 0.5.4 Repository Port 의 분리 원칙 (공존 대비)
+
+레시피의 도메인 layer 가 **2개의 port** 를 갖도록 작성:
+
+```java
+// domain/{domain}/
+public interface XRepository {                      // CUD + 단순 조회
+    Optional<X> findById(XId id);
+    boolean existsBy...(...);
+    X save(X x);
+}
+public interface XQueryRepository {                 // 복잡 검색 / 보고서 (옵션)
+    Page<XSummary> search(XSearchCriteria c, Pageable p);
+    List<XStats> stats(...);
+}
+```
+
+- **JPA only** 모드면 `XQueryRepository` 도 JPA Specification 으로 구현 (또는 안 만듦)
+- **공존** 모드면 `XRepository` = JPA / `XQueryRepository` = MyBatis
+- **MyBatis only** 면 둘 다 MyBatis 로 구현
+
+→ 처음부터 port 분리해두면 추후 모드 변경 / ORM 추가가 쉬움.
+
+### 0.5.5 코드 표기 규칙
+
+레시피 §6 안에서:
+- JPA 코드는 `// JPA Adapter` 헤더로 표시
+- 같은 자리에 MyBatis 변형이 필요할 땐 짧게 sketch + "전체는 [[../database/mybatis#X]] 참고"
+- 둘 다 완전한 동작 예제는 **레시피에 안 넣음** — `database/` 노트가 본거지
+
+---
+
 ## 1. 각 레시피의 표준 목차
 
 | 섹션 | 내용 |
@@ -96,7 +167,7 @@ dependencies {
 | 3. 아키텍처 / 의존성 흐름 | Controller → UseCase → Repository → External |
 | 4. DB 선택 / 스키마 | RDB vs NoSQL 근거 / 인덱스 / 제약 |
 | 5. 보안 / 암호화 | 알고리즘 선정 / 함정 / OWASP 매핑 |
-| 6. 구현 — Java | DTO (record) / Entity / Repo / Service / Controller / Config |
+| 6. 구현 — Java | DTO / Application / Controller / **JPA Adapter sketch** (MyBatis / 공존은 §0.5 참조) |
 | 7. 트랜잭션 / 예외 / 검증 | `@Transactional` 경계 / 예외 매핑 / Bean Validation |
 | 8. 테스트 | 단위 (Mockito) + 통합 (Testcontainers) |
 | 9. 운영 체크리스트 | 배포 / 모니터링 / 함정 |
@@ -107,6 +178,7 @@ dependencies {
 - `import` 는 생략 (가독성)
 - 패키지는 `com.example.shop` 가정
 - DTO 는 **record** 우선 (Java 14+ 표준 immutable)
+- Repository port = `domain/` interface / 구현체 = `infrastructure/persistence/{jpa,mybatis}/`
 
 ---
 

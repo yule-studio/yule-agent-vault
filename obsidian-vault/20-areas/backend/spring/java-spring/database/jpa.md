@@ -580,6 +580,132 @@ public class JpaUserRepositoryAdapter implements UserRepository {
 
 ---
 
+## 11.5 Recipe 별 JPA Adapter 적용
+
+[[../api-design/api-design#0.5 ORM 정책]] 에 따라, 각 레시피의 Repository port 를 JPA 로 구현하는 모범 예. 본 vault 의 모든 레시피의 §6 가 따르는 패턴 + 핵심 포인트만 모음.
+
+### 11.5.1 [[../api-design/signup|signup]] — `UserRepository`
+
+```java
+// port — domain/user/UserRepository.java
+public interface UserRepository {
+    Optional<User> findByEmail(Email email);
+    boolean existsByEmail(Email email);
+    User save(User user);
+    Optional<User> findById(UserId id);
+}
+```
+
+JPA 포인트:
+- `users.email` 의 **`lower(email)` 표현식 unique 인덱스** + `existsByEmailIgnoreCase`
+- `DataIntegrityViolationException` 잡아 `EmailAlreadyExistsException` 으로 변환 (race condition 대비)
+- ID 는 `@Id` + 어플리케이션 ULID 발급 (auto X)
+- `@Version` 추가 — 후속 패스워드 변경 시 race 차단
+
+전체 코드: [[../api-design/signup#6.5]].
+
+### 11.5.2 [[../api-design/login-jwt|login-jwt]] — `RefreshTokenRepository`
+
+```java
+public interface RefreshTokenRepository {
+    RefreshToken save(RefreshToken token);
+    Optional<RefreshToken> findByTokenHash(String hash);
+    void revokeAllForUser(UserId userId);
+}
+```
+
+JPA 포인트:
+- `refresh_tokens.token_hash` UNIQUE — raw 토큰 평문 저장 X
+- `revokeAllForUser` 는 `@Modifying @Query("update ... set status='REVOKED' where userId=:u")` — 영속성 컨텍스트 동기화 (`clearAutomatically = true`)
+- 만료 청소 batch — `@Scheduled` + `DELETE WHERE expires_at < ...`
+
+### 11.5.3 [[../api-design/product-crud|product-crud]] — `ProductRepository`
+
+```java
+public interface ProductRepository {
+    Product save(Product product);
+    Optional<Product> findById(ProductId id);
+    Optional<Product> findByIdForUpdate(ProductId id);
+    Page<Product> findActive(Pageable pageable);
+}
+```
+
+JPA 포인트:
+- Product (Aggregate) 가 옵션 / 이미지 자식 컬렉션 → `@OneToMany(cascade = ALL, orphanRemoval = true)` + `@BatchSize(100)`
+- `@EntityGraph(attributePaths = {"brand", "options", "images", "tags"})` 으로 N+1 회피
+- `@Version` 낙관 락 (product / option 둘 다)
+- `findByIdForUpdate` = `@Lock(PESSIMISTIC_WRITE)` — 재고 차감용
+
+### 11.5.4 [[../api-design/product-search|product-search]] — JPA Specification
+
+검색은 `JpaSpecificationExecutor` + 동적 Specification 조합. 자세한 코드: [[../api-design/product-search#5.2]].
+
+> **공존 시**: 검색이 PG 만으로 무거워지면 — Specification 그만, MyBatis Query Repository 추가 ([[mybatis#4. Dynamic SQL]]).
+
+### 11.5.5 [[../api-design/cart|cart]] — `CartRepository` (member 측)
+
+```java
+public interface CartRepository {
+    Optional<Cart> findByOwner(CartOwner owner);
+    Cart save(Cart cart);
+    void delete(CartOwner owner);
+}
+```
+
+JPA 포인트:
+- `MemberOwner` 면 JPA, `GuestOwner` 면 Redis — `CompositeCartRepository` 가 분기 ([[../api-design/cart#3.2]])
+- `cart_items` UNIQUE `(cart_id, product_id, option_id)` — 같은 옵션 중복 차단
+
+### 11.5.6 [[../api-design/order-stock|order-stock]] — `OrderRepository` + 비관 락
+
+```java
+public interface OrderRepository {
+    Order save(Order order);
+    Optional<Order> findById(OrderId id);
+    Optional<Order> findByIdempotencyKey(String key);
+    List<Order> findExpiredCandidates(Instant before, int limit);
+}
+```
+
+JPA 포인트:
+- `orders.idempotency_key` UNIQUE (per buyer) — 멱등성 보장
+- **재고 차감 시 옵션을 비관 락** — `ProductOptionJpaRepository.findByIdForUpdate` (`@Lock(PESSIMISTIC_WRITE)`)
+- 옵션 ID 정렬 후 락 → 데드락 회피 (애플리케이션 책임)
+- `stock_movements` 별도 entity — 감사 로그
+
+### 11.5.7 [[../api-design/payment-pg|payment-pg]] — `PaymentRepository` + 외부 IO 격리
+
+```java
+public interface PaymentRepository {
+    Payment save(Payment p);
+    Optional<Payment> findById(PaymentId id);
+    Optional<Payment> findByOrderId(OrderId orderId);
+    Optional<Payment> findByPgPaymentKey(String key);
+}
+```
+
+JPA 포인트:
+- `payments.order_id` UNIQUE — 한 주문 한 결제
+- `payments.pg_payment_key` UNIQUE — PG 의 payment key 중복 차단
+- **PG 호출은 `@Transactional` 밖** — `TransactionTemplate` 으로 분할 ([[../api-design/payment-pg#5.1]])
+- `payment_webhooks.event_id` UNIQUE — webhook 멱등
+
+### 11.5.8 공통 — 모든 JPA Adapter 의 5가지 규칙
+
+1. **Adapter 안에서만 `@Entity` 임포트** — 도메인은 모름.
+2. **`save()` 의 INSERT/UPDATE 분기** — Spring Data `save` 의 detached 매핑이 어색할 수 있음. `findById` 후 갱신 vs 신규 분기를 adapter 가 명시:
+   ```java
+   var entity = spring.findById(domain.id().value())
+       .map(e -> { e.apply(domain, now); return e; })
+       .orElseGet(() -> new XJpaEntity(domain, now));
+   return toDomain(spring.save(entity));
+   ```
+3. **`@EntityGraph` 또는 `@BatchSize`** 로 N+1 차단 (목록에서 컬렉션 access 면 무조건).
+4. **`@Version`** 으로 낙관 락 (변경 빈도 있는 entity).
+5. **도메인 → Entity 매핑은 adapter 의 private 메서드** — `toDomain`, `toEntity`. 도메인 / Entity 클래스 둘 다 modify.
+
+---
+
 ## 12. 함정 모음
 
 ### 함정 1 — `open-in-view: true`

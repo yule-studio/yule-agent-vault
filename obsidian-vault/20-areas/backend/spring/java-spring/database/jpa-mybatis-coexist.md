@@ -346,6 +346,125 @@ com.example.shop
 
 ---
 
+## 9.5 Recipe 별 JPA + MyBatis 분담 패턴
+
+[[../api-design/api-design#0.5 ORM 정책]] 의 **공존 모드**. CUD 는 JPA, 복잡 read 는 MyBatis. Port 를 2개로 분리.
+
+### 9.5.1 [[../api-design/signup|signup]] — 단순 CUD 만 (MyBatis 불필요)
+
+- `UserRepository` = **JPA only** ([[jpa#11.5.1]])
+- 검색 / 통계가 안 들어가므로 MyBatis 추가 이유 X.
+
+### 9.5.2 [[../api-design/login-jwt|login-jwt]] — refresh token 단순 CUD (JPA only)
+
+- `RefreshTokenRepository` = **JPA only**
+- 단, 토큰 만료 통계 / 디바이스별 활성 토큰 보고서 같은 화면이 생기면 별도 `RefreshTokenQueryRepository` (MyBatis) 추가
+
+### 9.5.3 [[../api-design/product-crud|product-crud]] — Aggregate CUD = JPA, 검색은 분리
+
+```java
+// domain/product/
+public interface ProductRepository {                  // ✅ JPA
+    Product save(Product product);
+    Optional<Product> findById(ProductId id);
+    Optional<Product> findByIdForUpdate(ProductId id);
+}
+
+public interface ProductQueryRepository {             // ✅ MyBatis (검색 / 보고서)
+    Page<ProductSummary> search(ProductSearchCriteria c, Pageable p);
+    List<TopSellingProduct> topSelling30d(int limit);
+    List<RevenueByBrand> revenueByBrand(LocalDate from, LocalDate to);
+}
+```
+
+→ `ProductRepository` 는 JPA Adapter 가 구현 ([[jpa#11.5.3]]). `ProductQueryRepository` 는 MyBatis Adapter 가 구현 ([[mybatis#10.5.3]]).
+
+### 9.5.4 [[../api-design/product-search|product-search]] — **MyBatis 가 main**
+
+검색 자체가 product-search 의 본 작업. 그래도 패턴은 유지:
+
+```java
+public interface ProductQueryRepository {
+    Page<ProductSummary> search(ProductSearchCriteria c, Cursor cursor, int limit);
+}
+```
+
+→ JPA Specification 으로 시작 → 트래픽 / 복잡도 증가 시 같은 port 의 구현체를 MyBatis 로 교체. Service / Controller 는 변동 없음.
+
+### 9.5.5 [[../api-design/cart|cart]] — guest = Redis / member = JPA (MyBatis 없음)
+
+- 외부 보고서 화면이 필요하면 → MyBatis Query Repository 추가
+- 일반 운영에선 JPA + Redis 만으로 충분
+
+### 9.5.6 [[../api-design/order-stock|order-stock]] — 트랜잭션 = JPA / 통계 / 정합성 점검 = MyBatis
+
+```java
+public interface OrderRepository {                    // ✅ JPA (트랜잭션 + 동시성)
+    Order save(Order order);
+    Optional<Order> findById(OrderId id);
+    Optional<Order> findByIdempotencyKey(String key);
+    List<Order> findExpiredCandidates(Instant before, int limit);
+}
+
+public interface OrderQueryRepository {               // ✅ MyBatis
+    Page<OrderRow> searchAdmin(OrderSearchCriteria c, Pageable p);
+    List<DailyOrderStats> daily(LocalDate from, LocalDate to);
+    List<Order> findUnreconciled();                   // PG 정합성 점검
+}
+```
+
+핵심:
+- **재고 차감 같은 정확성 critical 변경은 JPA** — `@Version`, `@Lock`, dirty checking 안전
+- **운영 화면 / 통계는 MyBatis** — 복잡 JOIN + GROUP BY 자유
+
+### 9.5.7 [[../api-design/payment-pg|payment-pg]] — 결제 = JPA / webhook 멱등 = MyBatis (선택)
+
+```java
+public interface PaymentRepository {                  // ✅ JPA
+    Payment save(Payment p);
+    Optional<Payment> findById(PaymentId id);
+    Optional<Payment> findByOrderId(OrderId orderId);
+    Optional<Payment> findByPgPaymentKey(String key);
+}
+
+public interface PaymentWebhookRepository {           // ✅ MyBatis (INSERT ON CONFLICT)
+    boolean tryRecord(WebhookRow row);                // 멱등 — true = 새로 받음, false = 이미 있음
+    void markProcessed(String eventId, String result, Instant at);
+    List<WebhookRow> findUnprocessed(int limit);
+}
+
+public interface PaymentQueryRepository {             // ✅ MyBatis (정산)
+    DailySettlement dailySettlement(LocalDate date);
+    List<PaymentReconciliationGap> drifts();          // PG vs DB
+}
+```
+
+MyBatis 가 빛나는 자리:
+- `INSERT ... ON CONFLICT DO NOTHING` (PG) — webhook 멱등을 SQL 한 줄
+- 결제 / 환불 / 정산 보고서
+
+---
+
+## 9.6 어떤 레시피에 어떤 분담 — 한눈에 보는 표
+
+| Recipe | JPA 담당 | MyBatis 담당 | 비고 |
+| --- | --- | --- | --- |
+| signup | `UserRepository` | — | 단순 CUD |
+| login-jwt | `RefreshTokenRepository` | — | 단순 CUD |
+| password-reset | `PasswordResetTokenRepository` | — | 단순 CUD |
+| product-crud | `ProductRepository` (Aggregate) | — | 자식 컬렉션 cascade 자동 |
+| product-search | `ProductRepository` (CUD) | `ProductQueryRepository` (검색) | **MyBatis 가 main** |
+| cart | `CartRepository` (member) | — | guest 는 Redis |
+| order-stock | `OrderRepository` (트랜잭션) | `OrderQueryRepository` (통계 / 정합성) | 정확성 vs 복잡 read 분리 |
+| payment-pg | `PaymentRepository` | `PaymentWebhookRepository`, `PaymentQueryRepository` | webhook 멱등 = ON CONFLICT |
+
+규칙:
+- 도메인의 **CUD / 트랜잭션 / 동시성 critical** = JPA
+- **검색 / 통계 / 보고서 / 정합성 점검** = MyBatis
+- 한 레시피에 두 ORM 이 같이 들어가도 **port (interface) 가 분리되어 있으면 모드 변경이 쉬움**
+
+---
+
 ## 10. 멀티 DataSource (참고)
 
 같은 DB 가 아니라 **2 개 DB** 사용 시:

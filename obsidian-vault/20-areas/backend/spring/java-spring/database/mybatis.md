@@ -442,6 +442,246 @@ public class MyBatisUserRepository implements UserRepository {
 
 ---
 
+## 10.5 Recipe 별 MyBatis 적용
+
+[[../api-design/api-design#0.5 ORM 정책]] 에 따라, 각 레시피의 Repository port 를 MyBatis 로 구현할 때의 모범. **MyBatis only** 또는 **공존** 모드에서 사용.
+
+### 10.5.1 [[../api-design/signup|signup]] — `UserRepository` (MyBatis)
+
+```java
+// infrastructure/persistence/mybatis/user/UserMapper.java
+@Mapper
+public interface UserMapper {
+    Optional<UserRow> findById(@Param("id") String id);
+    Optional<UserRow> findByEmailIgnoreCase(@Param("email") String email);
+    boolean existsByEmailIgnoreCase(@Param("email") String email);
+    int insert(UserRow row);
+    int update(UserRow row);
+}
+
+// MyBatis Adapter
+@Repository
+@RequiredArgsConstructor
+public class MyBatisUserRepository implements UserRepository {
+    private final UserMapper mapper;
+    private final Clock clock;
+
+    @Override public boolean existsByEmail(Email email) {
+        return mapper.existsByEmailIgnoreCase(email.value());
+    }
+    @Override public Optional<User> findByEmail(Email email) {
+        return mapper.findByEmailIgnoreCase(email.value()).map(this::toDomain);
+    }
+    @Override public User save(User user) {
+        var row = toRow(user, Instant.now(clock));
+        var existing = mapper.findById(user.id().value());
+        try {
+            if (existing.isPresent()) mapper.update(row);
+            else mapper.insert(row);
+        } catch (DuplicateKeyException e) {
+            // PG/MySQL UNIQUE violation
+            throw new EmailAlreadyExistsException(user.email());
+        }
+        return user;
+    }
+    private User toDomain(UserRow r) {
+        return User.reconstitute(
+            new UserId(r.id()), new Email(r.email()), new PasswordHash(r.passwordHash()),
+            r.name(), UserStatus.valueOf(r.status()), r.createdAt());
+    }
+    private UserRow toRow(User u, Instant now) { /* ... */ throw new UnsupportedOperationException(); }
+}
+```
+
+```xml
+<!-- mapper/user/UserMapper.xml -->
+<mapper namespace="com.example.shop.infrastructure.persistence.mybatis.user.UserMapper">
+    <select id="findByEmailIgnoreCase" resultType="UserRow">
+        SELECT id, email, password_hash AS passwordHash, name, status, created_at AS createdAt, updated_at AS updatedAt
+        FROM users WHERE lower(email) = lower(#{email})
+    </select>
+    <select id="existsByEmailIgnoreCase" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM users WHERE lower(email) = lower(#{email}))
+    </select>
+    <insert id="insert">
+        INSERT INTO users (id, email, password_hash, name, status, created_at, updated_at)
+        VALUES (#{id}, #{email}, #{passwordHash}, #{name}, #{status}, #{createdAt}, #{updatedAt})
+    </insert>
+</mapper>
+```
+
+MyBatis 포인트:
+- JPA dirty checking 없음 → **명시적 `update()`** 호출 필수
+- `DuplicateKeyException` (Spring) 으로 DB unique violation 변환
+- `UserRow` 는 mapper 전용 DTO — 도메인 (`User`) 이 알지 못함
+
+### 10.5.2 [[../api-design/login-jwt|login-jwt]] — `RefreshTokenRepository` (MyBatis)
+
+```java
+@Mapper
+public interface RefreshTokenMapper {
+    Optional<RefreshTokenRow> findByTokenHash(@Param("hash") String hash);
+    Optional<RefreshTokenRow> findById(@Param("id") String id);
+    int insert(RefreshTokenRow row);
+    int updateStatus(@Param("id") String id, @Param("status") String status,
+                     @Param("rotatedToId") String rotatedToId);
+    int revokeAllForUser(@Param("userId") String userId);
+}
+```
+
+```xml
+<update id="revokeAllForUser">
+    UPDATE refresh_tokens
+    SET status = 'REVOKED'
+    WHERE user_id = #{userId} AND status = 'ACTIVE'
+</update>
+```
+
+MyBatis 포인트:
+- `revokeAllForUser` 는 명시적 단일 UPDATE — JPA `@Modifying` 보다 가독성 높음
+
+### 10.5.3 [[../api-design/product-crud|product-crud]] — `ProductRepository` + 1:N
+
+가장 어려운 케이스 — Product (Aggregate) 가 options / images / tags 자식 컬렉션을 가짐. JPA cascade 자동 X. **명시적 fetch + 명시적 cascade 저장**.
+
+```java
+@Mapper
+public interface ProductMapper {
+    Optional<ProductRow> findById(@Param("id") String id);
+    int insertProduct(ProductRow row);
+    int updateProduct(ProductRow row);
+
+    List<ProductOptionRow> findOptionsByProductId(@Param("productId") String productId);
+    int insertOption(ProductOptionRow row);
+    int deleteOptionsByProductId(@Param("productId") String productId);
+
+    List<ProductImageRow> findImagesByProductId(@Param("productId") String productId);
+    int insertImage(ProductImageRow row);
+    int deleteImagesByProductId(@Param("productId") String productId);
+}
+
+// Adapter — Aggregate 저장의 책임을 통째로 짊어짐
+@Repository
+public class MyBatisProductRepository implements ProductRepository {
+    private final ProductMapper mapper;
+
+    @Override public Optional<Product> findById(ProductId id) {
+        var row = mapper.findById(id.value()).orElse(null);
+        if (row == null) return Optional.empty();
+        var options = mapper.findOptionsByProductId(id.value());
+        var images = mapper.findImagesByProductId(id.value());
+        return Optional.of(toDomain(row, options, images));
+    }
+
+    @Override
+    @Transactional
+    public Product save(Product product) {
+        var existing = mapper.findById(product.id().value()).isPresent();
+        if (existing) mapper.updateProduct(toRow(product));
+        else          mapper.insertProduct(toRow(product));
+
+        // 자식 cascade — 단순 구현: 전체 교체. 큰 컬렉션은 diff 권장.
+        mapper.deleteOptionsByProductId(product.id().value());
+        mapper.deleteImagesByProductId(product.id().value());
+        product.options().forEach(o -> mapper.insertOption(toOptionRow(o, product.id())));
+        product.images().forEach(i -> mapper.insertImage(toImageRow(i, product.id())));
+
+        return product;
+    }
+}
+```
+
+MyBatis 포인트:
+- **JPA cascade 없음** — adapter 가 자식 INSERT/DELETE 명시적 처리
+- 단순 패턴 = "전체 교체" (작은 컬렉션 OK). 큰 컬렉션은 **diff 후 변경된 것만**
+- 트랜잭션 한 묶음 필수 (`@Transactional`)
+- 1:N read 는 **별도 select** (cartesian 회피) — 또는 한 쿼리 + `<collection>` ([[mybatis#5.2 1:N]])
+
+### 10.5.4 [[../api-design/product-search|product-search]] — MyBatis 의 진가
+
+MyBatis 가 가장 빛나는 영역. 동적 SQL + cursor + 다중 필터.
+
+```xml
+<select id="search" resultMap="ProductSummaryMap">
+    SELECT
+      p.id, p.name, p.base_price_krw AS basePriceKrw, p.main_image_url AS mainImageUrl,
+      p.created_at AS createdAt, b.id AS brandId, b.name AS brandName,
+      CASE WHEN COALESCE(SUM(po.stock), 0) = 0 THEN true ELSE false END AS soldOut
+    FROM products p
+      JOIN brands b ON p.brand_id = b.id
+      LEFT JOIN product_options po ON po.product_id = p.id
+    <where>
+        AND p.status = 'ACTIVE'
+        <if test="q != null and q != ''">
+            AND lower(p.name) LIKE concat('%', lower(#{q}), '%')
+        </if>
+        <if test="brand != null and brand.size() > 0">
+            AND p.brand_id IN
+            <foreach collection="brand" item="b" open="(" separator="," close=")">#{b}</foreach>
+        </if>
+        <if test="priceMin != null">  AND p.base_price_krw &gt;= #{priceMin} </if>
+        <if test="priceMax != null">  AND p.base_price_krw &lt;= #{priceMax} </if>
+        <if test="cursor != null">
+            AND (p.created_at, p.id) &lt; (#{cursor.lastCreatedAt}, #{cursor.lastId})
+        </if>
+    </where>
+    GROUP BY p.id, b.id, b.name
+    ORDER BY p.created_at DESC, p.id DESC
+    LIMIT #{limit}
+</select>
+```
+
+→ JPA Specification + N+1 회피 + 커서를 합친 분량을 **하나의 XML** 로. **공존 모드에서 검색 / 보고서는 MyBatis** 가 표준 이유.
+
+### 10.5.5 [[../api-design/cart|cart]] — `CartRepository` (MyBatis)
+
+JPA 와 동일 패턴. `member` 는 RDB (MyBatis 가능), `guest` 는 Redis (변동 없음).
+
+### 10.5.6 [[../api-design/order-stock|order-stock]] — 비관 락 SQL 직접
+
+```xml
+<select id="findOptionForUpdate" resultType="ProductOptionRow">
+    SELECT id, name, value, extra_price_krw AS extraPriceKrw, stock
+    FROM product_options
+    WHERE id = #{id}
+    FOR UPDATE
+</select>
+```
+
+→ JPA `@Lock(PESSIMISTIC_WRITE)` 와 같음. SQL 가독성 ↑.
+
+```xml
+<update id="decreaseStock">
+    UPDATE product_options
+    SET stock = stock - #{qty}
+    WHERE id = #{id} AND stock &gt;= #{qty}
+</update>
+```
+
+→ **rowCount = 0 면 재고 부족** — application 에서 검사. SELECT 없이 한 쿼리로 검증 + 차감 가능 (낙관 락 식).
+
+### 10.5.7 [[../api-design/payment-pg|payment-pg]] — webhook 멱등 + audit
+
+```xml
+<insert id="insertWebhook">
+    INSERT INTO payment_webhooks (id, provider, event_id, payment_key, event_type, payload, signature, received_at)
+    VALUES (#{id}, #{provider}, #{eventId}, #{paymentKey}, #{eventType}, #{payload}::jsonb, #{signature}, #{receivedAt})
+    ON CONFLICT (provider, event_id) DO NOTHING
+</insert>
+```
+
+→ **`ON CONFLICT DO NOTHING`** 으로 멱등을 SQL 한 줄에. JPA 보다 명확.
+
+### 10.5.8 공통 — 모든 MyBatis Adapter 의 5가지 규칙
+
+1. **Row DTO 는 mapper 전용** — 도메인 (`User`) 이 알지 못함. Adapter 가 변환.
+2. **`@Transactional` 안에서만 mapper 호출** — connection pool / SqlSession scope.
+3. **`#{}` 만 사용** — `${}` 는 메타 (컬럼명 동적) 에만, 사용자 입력은 절대 X.
+4. **자식 cascade 는 명시적** — JPA 처럼 자동 X. delete + insert 또는 diff.
+5. **map-underscore-to-camel-case = true** + AS 별칭으로 매핑 안정.
+
+---
+
 ## 11. 함정 모음
 
 ### 함정 1 — `${}` 사용 (SQL injection)
