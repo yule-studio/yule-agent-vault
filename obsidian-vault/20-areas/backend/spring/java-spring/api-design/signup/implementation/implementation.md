@@ -22,12 +22,13 @@ tags:
 
 ---
 
-## 1. 6 핵심 흐름
+## 1. 7 핵심 흐름
 
 | 노트 | 무엇 | 의존성 |
 | --- | --- | --- |
 | [[signup-impl]] | 회원가입 — User 생성 + 약관 동의 + 이메일 인증 trigger | DB, outbox |
 | [[login-impl]] | 로그인 — credential 검증 + JWT 발급 + refresh 생성 | DB |
+| [[social-login-impl]] | 소셜 로그인 — Apple / Google / Kakao / Naver | DB, IdP |
 | [[token-refresh-impl]] | refresh rotation + reuse detection | DB, Redis (옵션) |
 | [[email-verification-impl]] | 이메일 인증 — token 발급 / 검증 | DB, SES |
 | [[phone-verification-impl]] | SMS 6-digit 인증 | Redis, NCP SENS |

@@ -41,10 +41,12 @@ tags:
 flowchart LR
     A[회원가입<br/>signup-impl] --> B[이메일·휴대폰 인증<br/>email/phone verification]
     B --> C[로그인<br/>login JWT]
+    A2[소셜 로그인<br/>social-login] --> C
     C --> D[토큰 갱신<br/>token-refresh]
     C --> E[패스워드 리셋<br/>password-reset]
 
     style A fill:#fef3c7
+    style A2 fill:#fef3c7
     style C fill:#dbeafe
 ```
 
@@ -61,42 +63,46 @@ flowchart LR
 | 1 | [[overview]] | 전체 auth 흐름 / 어떤 endpoint 가 필요한지 |
 | 2 | [[prerequisites]] | 전제 / 범위 / 과한 적용 기준 |
 | 3 | [[requirements]] | 요구사항 + 완료 조건 (Acceptance Criteria) |
-| 4 | [[design-decisions]] ⭐ | **권장 도구 가이드** — 이메일 / SMS / 패스워드 / JWT / 소셜 / 2FA |
+| 4 | [[design-decisions/design-decisions]] ⭐ | **권장 도구 가이드** — 이메일 / SMS / 패스워드 / JWT / 소셜 / 2FA |
 
 ### Phase 2 — 기반 (DB & 도메인)
 
 | 순 | 노트 | 무엇을 만들지 |
 | --- | --- | --- |
-| 5 | [[database]] | DB 스키마 (users + refresh_tokens + verification + reset / 약관) |
-| 6 | [[domain-model]] | 도메인 모델 (Aggregate + Value Object + 상태 전이) |
-| 7 | [[architecture]] | 계층 / Port·Adapter |
-| 8 | [[security]] | 인증·인가 정책 / 암호화 / OWASP |
+| 5 | [[database/database]] | DB 스키마 (users + refresh_tokens + verification + reset / 약관) |
+| 6 | [[enums/enums]] | 상태 / 권한 / provider enum |
+| 7 | [[domain-model/domain-model]] | 도메인 모델 (Aggregate + Value Object + 상태 전이) |
+| 8 | [[architecture]] | 계층 / Port·Adapter |
+| 9 | [[security/security]] | 인증·인가 정책 / 암호화 / OWASP |
 
 ### Phase 3 — 기능별 구현
 
-| 순   | 노트                          | 무엇                                       |
-| --- | --------------------------- | ---------------------------------------- |
-| 9   | [[signup-impl]]             | 회원가입 구현                                  |
-| 10  | [[email-verification-impl]] | 이메일 인증                                   |
-| 11  | [[phone-verification-impl]] | 휴대폰 인증 (한국 SaaS — AlimTalk / NCP SENS 등) |
-| 12  | [[login-impl]]              | 로그인 (JWT access + refresh)               |
-| 13  | [[token-refresh-impl]]      | 토큰 갱신 (rotation + reuse detection)       |
-| 14  | [[password-reset-impl]]     | 패스워드 리셋                                  |
+| 순   | 노트                                              | 무엇                                       |
+| --- | ----------------------------------------------- | ---------------------------------------- |
+| 10  | [[implementation/implementation]]               | implementation hub (구현 순서) |
+| 11  | [[implementation/signup-impl]]                  | 회원가입 구현                                  |
+| 12  | [[implementation/email-verification-impl]]      | 이메일 인증                                   |
+| 13  | [[implementation/phone-verification-impl]]      | 휴대폰 인증 (한국 SaaS — AlimTalk / NCP SENS 등) |
+| 14  | [[implementation/login-impl]]                   | 로그인 (JWT access + refresh)               |
+| 15  | [[implementation/social-login-impl]]            | 소셜 로그인 (Apple / Google / Kakao / Naver)  |
+| 16  | [[implementation/token-refresh-impl]]           | 토큰 갱신 (rotation + reuse detection)       |
+| 17  | [[implementation/password-reset-impl]]          | 패스워드 리셋                                  |
+| 18  | [[implementation/email-verification-model]]     | (참고) URL token vs 6-digit 모델 비교         |
 
 ### Phase 4 — 운영 품질
 
 | 순 | 노트 | 무엇 |
 | --- | --- | --- |
-| 15 | [[transactions]] | 트랜잭션 / 동시성 / 멱등성 |
-| 16 | [[testing]] | 테스트 시나리오 + 단위 + 통합 |
-| 17 | [[operations]] | 배포 / 로그 / 메트릭 / 알림 / 롤백 |
+| 19 | [[transactions]] | 트랜잭션 / 동시성 / 멱등성 |
+| 20 | [[testing/testing]] | 테스트 시나리오 + 단위 + 통합 |
+| 21 | [[operations/operations]] | 배포 / 로그 / 메트릭 / 알림 / 롤백 |
 
 ### Phase 5 — Reference
 
 | 순 | 노트 | 무엇 |
 | --- | --- | --- |
-| 18 | [[implementation-order]] | 단계별 PR 분할 to-do |
-| 19 | [[pitfalls]] | 흔한 함정 (코드 리뷰 체크리스트) |
+| 22 | [[implementation-order]] | 단계별 PR 분할 to-do |
+| 23 | [[pitfalls/pitfalls]] | 흔한 함정 (코드 리뷰 체크리스트) |
 
 ---
 
@@ -133,9 +139,10 @@ flowchart TD
 ### 4.1 전체 endpoint
 
 ```
-# 회원가입
-POST   /api/v1/auth/signup
-POST   /api/v1/auth/signup/social                 (Apple/Google/Kakao/Naver)
+# 회원가입 / 로그인
+POST   /api/v1/auth/signup                         (이메일 + password)
+POST   /api/v1/auth/login                          (이메일 + password)
+POST   /api/v1/auth/login/social                   (Apple/Google/Kakao/Naver — 가입 + 로그인 통합)
 
 # 인증 (verification)
 POST   /api/v1/auth/verify/email/request          (인증 메일 발송)
@@ -143,12 +150,8 @@ POST   /api/v1/auth/verify/email/confirm          (메일의 토큰 검증)
 POST   /api/v1/auth/verify/phone/request          (SMS 인증번호 발송)
 POST   /api/v1/auth/verify/phone/confirm          (인증번호 검증)
 
-# 로그인
-POST   /api/v1/auth/login
-POST   /api/v1/auth/login/social
-
 # 토큰
-POST   /api/v1/auth/token/refresh                  (rotation)
+POST   /api/v1/auth/refresh                        (rotation)
 POST   /api/v1/auth/logout                          (refresh 무효)
 
 # 패스워드
@@ -218,7 +221,7 @@ stateDiagram-v2
     end note
 ```
 
-### 4.4 권장 도구 (자세히는 [[design-decisions]])
+### 4.4 권장 도구 (자세히는 [[design-decisions/design-decisions]])
 
 | 영역 | 권장 |
 | --- | --- |
