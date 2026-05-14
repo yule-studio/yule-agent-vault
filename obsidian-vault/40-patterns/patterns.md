@@ -16,6 +16,7 @@
 | deployment-patterns | [[deployment-patterns/]] | Blue-Green / Canary / Rolling |
 | error-handling-patterns | [[error-handling-patterns/]] | Circuit Breaker / Retry / Bulkhead |
 | refactoring-patterns | [[refactoring-patterns/]] | Strangler Fig / Branch by Abstraction |
+| github-conventions | [[github-conventions/github-conventions]] | 이슈 6 종 / PR 템플릿 / 라벨 priority |
 
 ## 파일명 컨벤션
 
