@@ -9,18 +9,18 @@
 
 ## 가지 (10 폴더)
 
-| # | 폴더 | 진입점 | 한 줄 책임 |
-| --- | --- | --- | --- |
-| 00 | inbox | [[00-inbox/inbox]] | 분류 전 임시 (links / quick-notes / unsorted) |
-| 10 | projects | [[10-projects/projects]] | 프로젝트별 (yule-studio-agent / homelab / spring-sandbox / yule-smoke-test) |
-| 20 | areas | [[20-areas/areas]] | 지속 학습 주제 (ai-agent / backend / devops / frontend / career / computer-science) |
-| 30 | resources | [[30-resources/resources]] | 외부 자료 요약 (articles / books / lectures / official-docs / papers / examples) |
-| 40 | patterns | [[40-patterns/patterns]] | 재사용 설계 패턴 (architecture / api / design / deployment / error-handling / refactoring) |
-| 50 | snippets | [[50-snippets/snippets]] | 코드 조각 (bash / docker / java / python / spring / sql / typescript / github-actions) |
-| 60 | troubleshooting | [[60-troubleshooting/troubleshooting]] | 에러 해결 (ai-agent / backend / database / devops / frontend / network) |
-| 70 | daily | [[70-daily/daily]] | 일일 작업 기록 (연도별) |
-| 80 | templates | [[80-templates/templates]] | Obsidian 노트 템플릿 |
-| 90 | archive | [[90-archive/archive]] | 보관 (deprecated-notes / migrated / old-projects) |
+| #   | 폴더              | 진입점                                    | 한 줄 책임                                                                              |
+| --- | --------------- | -------------------------------------- | ----------------------------------------------------------------------------------- |
+| 00  | inbox           | [[00-inbox/inbox]]                     | 분류 전 임시 (links / quick-notes / unsorted)                                            |
+| 10  | projects        | [[10-projects/projects]]               | 프로젝트별 (yule-studio-agent / homelab / spring-sandbox / yule-smoke-test)              |
+| 20  | areas           | [[20-areas/areas]]                     | 지속 학습 주제 (ai-agent / backend / devops / frontend / career / computer-science)       |
+| 30  | resources       | [[30-resources/resources]]             | 외부 자료 요약 (articles / books / lectures / official-docs / papers / examples)          |
+| 40  | patterns        | [[40-patterns/patterns]]               | 재사용 설계 패턴 (architecture / api / design / deployment / error-handling / refactoring) |
+| 50  | snippets        | [[50-snippets/snippets]]               | 코드 조각 (bash / docker / java / python / spring / sql / typescript / github-actions)  |
+| 60  | troubleshooting | [[60-troubleshooting/troubleshooting]] | 에러 해결 (ai-agent / backend / database / devops / frontend / network)                 |
+| 70  | daily           | [[70-daily/daily]]                     | 일일 작업 기록 (연도별)                                                                      |
+| 80  | templates       | [[80-templates/templates]]             | Obsidian 노트 템플릿                                                                     |
+| 90  | archive         | [[90-archive/archive]]                 | 보관 (deprecated-notes / migrated / old-projects)                                     |
 
 ## 어디에 노트를 두나? (라우팅 표)
 
