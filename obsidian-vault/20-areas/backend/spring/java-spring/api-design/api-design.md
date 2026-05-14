@@ -331,26 +331,33 @@ com.example.shop
 
 ## 6. 진행 상태
 
-| 레시피 | 상태 |
-| --- | --- |
-| [[signup]] | ✅ Java |
-| [[login-jwt]] | ✅ Java |
-| [[password-reset]] | ✅ Java |
-| email-verification | 🟡 |
-| oauth2-social-login | 🟡 |
-| 2fa-totp | 🟡 |
-| rbac-permissions | 🟡 |
-| pagination-search | 🟡 |
-| payment-pg | 🟡 |
-| order-stock | 🟡 |
-| file-upload-s3 | 🟡 |
-| cache-redis | 🟡 |
-| distributed-lock-redisson | 🟡 |
-| rate-limiting | 🟡 |
-| websocket-stomp | 🟡 |
-| webhook-send | 🟡 |
-| excel-csv-import-export | 🟡 |
-| elasticsearch-integration | 🟡 |
+| 레시피                       | 상태  |
+| ------------------------- | --- |
+| [[signup]]                | ✅   |
+| [[login-jwt]]             | ✅   |
+| [[password-reset]]        | ✅   |
+| [[product-crud]]          | ✅   |
+| [[product-search]]        | ✅   |
+| [[cart]]                  | ✅   |
+| [[order-stock]]           | ✅   |
+| [[payment-pg]]            | ✅   |
+| [[email-verification]]    | ✅   |
+| [[oauth2-social-login]]   | ✅   |
+| [[two-factor-auth]]       | ✅   |
+| [[rbac-permissions]]      | ✅   |
+| [[file-upload-s3]]        | ✅   |
+| [[rate-limiting]]         | ✅   |
+| [[distributed-lock]]      | ✅   |
+| [[cache-redis]]           | ✅   |
+| websocket-stomp           | 🟡  |
+| webhook-send              | 🟡  |
+| review                    | 🟡  |
+| geo-search                | 🟡  |
+| chat-realtime             | 🟡  |
+| feed-timeline             | 🟡  |
+| recommendation            | 🟡  |
+| excel-csv-import-export   | 🟡  |
+| elasticsearch-integration | 🟡  |
 
 ---
 
