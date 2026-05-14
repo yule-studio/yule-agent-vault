@@ -379,14 +379,9 @@ com.example.shop
 
 | 레시피                       | 상태  |
 | ------------------------- | --- |
-| [[signup]]                | ✅   |
-| [[login-jwt]]             | ✅   |
-| [[password-reset]]        | ✅   |
-| [[product-crud]]          | ✅   |
-| [[product-search]]        | ✅   |
-| [[cart]]                  | ✅   |
-| [[order-stock]]           | ✅   |
-| [[payment-pg]]            | ✅   |
+| [[signup/signup]]         | ✅ (folder split)   |
+| [[board/board]]           | ✅ (folder split)   |
+| [[product/product]]       | ✅ (folder split — PG + 디지털 + Kafka F10+)   |
 | [[email-verification]]    | ✅   |
 | [[oauth2-social-login]]   | ✅   |
 | [[two-factor-auth]]       | ✅   |
