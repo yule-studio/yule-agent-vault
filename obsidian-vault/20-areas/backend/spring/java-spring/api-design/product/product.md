@@ -85,7 +85,8 @@ product/
 │   ├── product-status-policy.md ← DRAFT/ACTIVE/SOLD_OUT/DISCONTINUED
 │   ├── option-strategy.md      ← size/color SKU
 │   ├── currency-strategy.md    ← KRW only vs 다국적
-│   └── settlement-policy.md    ← 정산 주기
+│   ├── settlement-policy.md    ← 정산 주기
+│   └── kafka-event-driven.md   ★ F10+ Kafka 고도화 (분산 / 대용량)
 │
 ├── database/
 │   ├── database.md             ← ERD hub
@@ -173,6 +174,8 @@ product/
 
 ## 3. Phase 단계 (구현 순서)
 
+### 3.1 Phase F0~F9 — 단일 노드 / Spring 기반 MVP
+
 | Phase | 내용 | 기간 |
 | --- | --- | --- |
 | F0 | 준비 (Spring 3.3 + signup 인증 통합) | 1주 |
@@ -186,23 +189,35 @@ product/
 | F8 | 환불 + 정산 | 1.5주 |
 | F9 | 운영 + 대사 | 1주 |
 
-자세히: [[implementation-order]].
-
 총 ~15주 (3.5개월, 팀 2명 기준).
+
+### 3.2 Phase F10~F12 — 대용량 / 분산 고도화 ★
+
+| Phase | 내용 | 기간 |
+| --- | --- | --- |
+| **F10** | **Outbox + Kafka producer 도입** (in-process 와 dual-write 검증) | 1.5주 |
+| **F11** | **Kafka consumer 분리** (digital / notification / settlement / audit) | 2주 |
+| **F12** | **DLQ / replay / KStreams 통계 / 보안 (SASL/TLS)** | 1.5주 |
+| F13 | TDD 강화 + Docker / AWS EC2 배포 + 모니터링 | 1주 |
+
+총 6주 추가 (Phase F0~F9 운영 후 → 대용량 진입 시 시작).
+
+자세히: [[design-decisions/kafka-event-driven]] · [[implementation-order]].
 
 ---
 
 ## 4. cheat sheet
 
-| 의사결정 | 정답 (한국 일반) | 어디 보면 됨 |
-| --- | --- | --- |
-| PG 첫 선택 | **토스페이먼츠** (개발자 경험 1위) | [[design-decisions/pg-selection]] |
-| 결제 흐름 | redirect 후 **/confirm** 서버 호출 | [[design-decisions/payment-flow]] |
-| webhook | HMAC-SHA-256 서명 + Idempotency-Key | [[security/webhook-signature]] |
-| 재고 차감 | **주문 시점** + 결제 실패 시 복원 | [[design-decisions/inventory-strategy]] |
+| 의사결정      | 정답 (한국 일반)                             | 어디 보면 됨                                      |
+| --------- | -------------------------------------- | -------------------------------------------- |
+| PG 첫 선택   | **토스페이먼츠** (개발자 경험 1위)                 | [[design-decisions/pg-selection]]            |
+| 결제 흐름     | redirect 후 **/confirm** 서버 호출          | [[design-decisions/payment-flow]]            |
+| webhook   | HMAC-SHA-256 서명 + Idempotency-Key      | [[security/webhook-signature]]               |
+| 재고 차감     | **주문 시점** + 결제 실패 시 복원                 | [[design-decisions/inventory-strategy]]      |
 | 디지털 자산 보호 | 사용자별 **고유 마스킹** PDF + GDrive presigned | [[design-decisions/digital-delivery-policy]] |
-| 환불 | DONE → CANCELED/PARTIAL_CANCELED (멱등) | [[design-decisions/refund-policy]] |
-| 정산 | PG webhook → 정산 row → 일/월 batch | [[design-decisions/settlement-policy]] |
+| 환불        | DONE → CANCELED/PARTIAL_CANCELED (멱등)  | [[design-decisions/refund-policy]]           |
+| 정산        | PG webhook → 정산 row → 일/월 batch        | [[design-decisions/settlement-policy]]       |
+| 대용량 분산    | F10+ Outbox + Kafka 점진 마이그            | [[design-decisions/kafka-event-driven]]      |
 
 ---
 
@@ -236,3 +251,4 @@ product/
 | Version | Date | 변경 |
 | --- | --- | --- |
 | v1.0.0 | 2026-05-14 | 최초 — folder hub + Phase 0~9 + PG 비교 + 책 디지털 + cheat sheet |
+| v1.1.0 | 2026-05-14 | Phase F10~F13 (Kafka 고도화) 추가 + design-decisions/kafka-event-driven 도입 |
