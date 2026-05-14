@@ -70,14 +70,14 @@ tags:
 
 ### Phase 3 — 기능별 구현
 
-| 순 | 노트 | 무엇 |
-| --- | --- | --- |
-| 9 | [[signup-impl]] | 회원가입 구현 |
-| 10 | [[email-verification-impl]] | 이메일 인증 |
-| 11 | [[phone-verification-impl]] | 휴대폰 인증 (한국 SaaS — AlimTalk / NCP SENS 등) |
-| 12 | [[login-impl]] | 로그인 (JWT access + refresh) |
-| 13 | [[token-refresh-impl]] | 토큰 갱신 (rotation + reuse detection) |
-| 14 | [[password-reset-impl]] | 패스워드 리셋 |
+| 순   | 노트                          | 무엇                                       |
+| --- | --------------------------- | ---------------------------------------- |
+| 9   | [[signup-impl]]             | 회원가입 구현                                  |
+| 10  | [[email-verification-impl]] | 이메일 인증                                   |
+| 11  | [[phone-verification-impl]] | 휴대폰 인증 (한국 SaaS — AlimTalk / NCP SENS 등) |
+| 12  | [[login-impl]]              | 로그인 (JWT access + refresh)               |
+| 13  | [[token-refresh-impl]]      | 토큰 갱신 (rotation + reuse detection)       |
+| 14  | [[password-reset-impl]]     | 패스워드 리셋                                  |
 
 ### Phase 4 — 운영 품질
 
