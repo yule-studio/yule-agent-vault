@@ -158,27 +158,73 @@ public interface XQueryRepository {                 // 복잡 검색 / 보고서
 
 ---
 
-## 1. 각 레시피의 표준 목차
+## 1. 각 레시피의 표준 목차 (v2)
 
-| 섹션 | 내용 |
-| --- | --- |
-| 1. 무엇을 만드는가 | API 1~2 개 요구사항 + 요청·응답 예시 |
-| 2. 도메인 모델 (OOP) | Aggregate / Entity / Value Object / Domain Event |
-| 3. 아키텍처 / 의존성 흐름 | Controller → UseCase → Repository → External |
-| 4. DB 선택 / 스키마 | RDB vs NoSQL 근거 / 인덱스 / 제약 |
-| 5. 보안 / 암호화 | 알고리즘 선정 / 함정 / OWASP 매핑 |
-| 6. 구현 — Java | DTO / Application / Controller / **JPA Adapter sketch** (MyBatis / 공존은 §0.5 참조) |
-| 7. 트랜잭션 / 예외 / 검증 | `@Transactional` 경계 / 예외 매핑 / Bean Validation |
-| 8. 테스트 | 단위 (Mockito) + 통합 (Testcontainers) |
-| 9. 운영 체크리스트 | 배포 / 모니터링 / 함정 |
-| 10. 관련 | 다른 레시피 cross-link |
+> **목표**: "이 문서만 보고도 개발자가 기능 하나를 처음부터 끝까지 구현할 수 있다."
+> v1 의 "설계 → 구현 → 테스트 → 운영" 흐름에 **전제 / 완료 조건 / 도메인 규칙 / 구현 순서 / 흔한 함정** 을 추가.
 
-코드 컨벤션:
+| 섹션                  | 내용                                                                              |
+| ------------------- | ------------------------------------------------------------------------------- |
+| 0. 전제 / 범위          | 적용 상황 / 사용 기술 / 제외 범위 / 과한 적용 기준                                                |
+| 1. 무엇을 만드는가         | API 1~2 개 요구사항 / 요청·응답 예시 / **완료 조건 (Acceptance Criteria)**                     |
+| 2. 도메인 모델 (OOP)     | Aggregate / Entity / Value Object / Domain Event / **도메인 규칙 / 상태 전이**           |
+| 3. 아키텍처 / 의존성 흐름    | Controller → UseCase → Domain → **Port → Adapter** (Persistence / External)    |
+| 4. DB 선택 / 스키마      | RDB vs NoSQL 근거 / **조회 패턴** / 인덱스 / 제약 / **정합성 기준**                             |
+| 5. 보안 / 인증·인가 / 암호화 | 인증 주체 / 권한 체크 / 민감정보 / 알고리즘 선정 / OWASP 매핑                                       |
+| 6. 구현 — Java        | **패키지 구조** / DTO / Application / Controller / JPA Adapter sketch                |
+| 7. 트랜잭션 / 예외 / 검증   | `@Transactional` 경계 / 예외 매핑 / Bean Validation / **동시성 / 멱등성**                   |
+| 8. 테스트              | **테스트 시나리오 표** / 단위 / 통합 / 실패 케이스                                               |
+| 9. 운영 체크리스트         | 배포 / 설정값 / 로그 / 메트릭 / 알림 / 롤백 / 장애 포인트                                         |
+| **10. 구현 순서**       | 어떤 파일과 계층부터 구현할지 단계별 순서 (요구사항 → DB → port → adapter → useCase → controller → 테스트) |
+| **11. 흔한 함정**       | 자주 하는 실수와 피해야 할 구현 방식                                                           |
+| 12. 관련              | 다른 레시피 cross-link                                                               |
+
+### 1.1 각 섹션의 의도
+
+- **§0 전제 / 범위** — "이 레시피를 언제 적용하면 좋고, 언제 과하다" 를 명시. 단순 CRUD 에 Aggregate + Domain Event 다 적용하면 과함.
+- **§1 완료 조건** — API spec 보다 "성공 시 어떤 상태가 변경되는가 / 실패 시 어떤 예외가 발생하는가 / 동일 요청 반복 시 어떻게 처리되는가" 가 더 중요.
+- **§2 도메인 규칙 / 상태 전이** — Entity 이름보다 "**언제 무엇이 가능하고 불가능한가**". `PENDING → APPROVED → COMPLETED`, `COMPLETED → CANCELED 불가` 같은 다이어그램 또는 텍스트.
+- **§3 Port / Adapter 명시** — Domain 의 Repository / External 호출이 어떻게 추상화되고 (port), 어떻게 구현되는지 (adapter). 헥사고날 풀어쓰기.
+- **§4 조회 패턴 / 정합성 기준** — 인덱스보다 먼저 "단건 / 목록 / 검색 / 정렬 어떤 패턴", "Unique / FK / Soft Delete 무엇을 보장하나".
+- **§5 인증·인가 분리** — "암호화" 보다 "이 endpoint 는 누가 호출 가능한가 (anonymous / authenticated / ROLE / 본인 리소스만)" 가 자주 누락. 인가 누락이 가장 흔한 사고.
+- **§6 패키지 구조** — `domain/ application/ infrastructure/ presentation/` 의 폴더 트리. 문서만 보고 파일 생성 가능.
+- **§7 동시성 / 멱등성** — "같은 요청 두 번 보내면?", "같은 사용자 동시 요청?", "Unique 제약 / Lock / Idempotency-Key" 중 무엇이 필요한가.
+- **§8 테스트 시나리오 표** — `| 케이스 | 입력 | 기대 결과 | 테스트 종류 |`. 정상 + 중복 + 권한 없음 + 잘못된 입력 + 동시성 — 빠뜨리기 어렵게.
+- **§9 로그·메트릭·롤백** — 단순 "배포 체크" 가 아니라 "어떤 메트릭 / 알림 / 롤백 가능 여부 / 환경변수".
+- **§10 구현 순서** — 설계 문서 끝났을 때 "어디부터 만들지" 막히는 게 가장 흔함. 단계별 to-do.
+- **§11 흔한 함정** — Controller 에 비즈니스 로직, Entity 를 Response 로 반환, 단순 CRUD 에 Aggregate 과도 적용 등 — 짧은 don'ts.
+
+### 1.2 분량이 큰 레시피는 폴더로 split
+
+레시피가 한 파일 (~1000 줄) 을 넘으면 폴더로 분할:
+
+```
+{recipe}/
+├── {recipe}.md              ← 폴더 hub (overview + 흐름 + TOC + 링크)
+├── prerequisites.md         ← §0
+├── requirements.md          ← §1
+├── domain-model.md          ← §2
+├── architecture.md          ← §3
+├── database.md              ← §4
+├── security.md              ← §5
+├── implementation.md        ← §6
+├── transactions.md          ← §7
+├── testing.md               ← §8
+├── operations.md            ← §9
+├── implementation-order.md  ← §10
+└── pitfalls.md              ← §11
+```
+
+→ 첫 split 예: [[signup/signup|↗ signup]] (folder).
+
+### 1.3 코드 컨벤션
+
 - 코드 블록 시작 시 **파일 경로 주석** — `// src/main/java/.../User.java`
 - `import` 는 생략 (가독성)
 - 패키지는 `com.example.shop` 가정
 - DTO 는 **record** 우선 (Java 14+ 표준 immutable)
 - Repository port = `domain/` interface / 구현체 = `infrastructure/persistence/{jpa,mybatis}/`
+- 상태 다이어그램은 텍스트 (`A → B`) 또는 `mermaid` 코드블록
 
 ---
 
