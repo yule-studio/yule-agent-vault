@@ -45,39 +45,110 @@ tags:
 
 ---
 
-## 2. 전체 ERD (high-level)
+## 2. 전체 ERD
 
+```mermaid
+erDiagram
+    users ||--o{ user_terms_consent_history : "user_id"
+    terms ||--o{ user_terms_consent_history : "terms_id"
+    users ||--o{ refresh_tokens : "user_id"
+    users ||--o{ email_verification_tokens : "user_id"
+    users ||--o{ password_reset_tokens : "user_id"
+    users }o--o{ email_outbox : "to_email (FK X)"
+
+    users {
+        char(26) id PK "ULID"
+        varchar(254) email UK "lower(email) UNIQUE"
+        varchar(20) phone
+        char(64) phone_hash UK "SHA-256"
+        varchar(255) password_hash "argon2id PHC, nullable (social)"
+        varchar(30) status "PENDING/ACTIVE/SUSPENDED/DELETED"
+        varchar(20) role "USER/SELLER/ADMIN/MASTER"
+        varchar(20) provider_type "LOCAL/APPLE/GOOGLE/KAKAO/NAVER"
+        varchar(100) external_id "(provider, external_id) UNIQUE"
+        bigint version "@Version 낙관 락"
+        timestamptz created_at
+    }
+
+    terms {
+        char(26) id PK
+        varchar(50) code "(code, version) UNIQUE"
+        varchar(20) version
+        boolean required
+        timestamptz effective_at
+        varchar(1) use_yn
+    }
+
+    user_terms_consent_history {
+        char(26) id PK
+        char(26) user_id FK
+        char(26) terms_id FK
+        varchar(1) consent_yn "Y/N"
+        timestamptz agreed_at
+        varchar(45) ip_address
+    }
+
+    refresh_tokens {
+        char(26) id PK "jti"
+        char(26) user_id FK
+        char(64) token_hash UK "SHA-256(raw)"
+        varchar(20) status "ACTIVE/ROTATED/REVOKED/EXPIRED"
+        char(26) rotated_to_id "chain 추적"
+        timestamptz expires_at
+    }
+
+    email_verification_tokens {
+        char(26) id PK
+        char(26) user_id FK
+        char(64) token_hash UK
+        varchar(20) status "ACTIVE/USED/REVOKED/EXPIRED"
+        timestamptz expires_at "TTL 24h"
+    }
+
+    password_reset_tokens {
+        char(26) id PK
+        char(26) user_id FK
+        char(64) token_hash UK
+        varchar(20) status
+        timestamptz expires_at "TTL 30m"
+    }
+
+    email_outbox {
+        char(26) id PK
+        varchar(254) to_email "user FK X (시점 의존)"
+        varchar(50) template
+        jsonb payload
+        varchar(20) status "PENDING/PROCESSING/SENT/FAILED/DEAD_LETTER"
+        timestamptz next_attempt_at
+    }
 ```
-┌────────────┐         ┌─────────────────────────────┐
-│   users    │◄────────│ user_terms_consent_history  │
-│            │  user_id├─────────────────────────────┤
-│ id (ULID)  │         │ terms_id ─────┐             │
-│ email      │         └───────────────┼─────────────┘
-│ password_  │                          │
-│  hash      │                          ▼
-│ status     │                  ┌───────────────┐
-│ role       │                  │     terms     │
-│ provider_  │                  │  (버전 관리)   │
-│  type      │                  └───────────────┘
-└────┬───────┘
-     │
-     ├─── userId ──→ ┌──────────────────────┐
-     │              │ refresh_tokens         │
-     │              │ - token_hash UNIQUE    │
-     │              │ - status (rotation)    │
-     │              └──────────────────────┘
-     │
-     ├─── userId ──→ ┌──────────────────────────────┐
-     │              │ email_verification_tokens     │
-     │              │ phone_verifications (Redis 도) │
-     │              │ password_reset_tokens          │
-     │              └──────────────────────────────┘
-     │
-     └─── to_email ─→ ┌──────────────────────┐
-                      │   email_outbox        │
-                      │   (PENDING → SENT)    │
-                      └──────────────────────┘
+
+### 2.1 관계 요약
+
+```mermaid
+flowchart LR
+    users[users<br/>auth 의 핵심]
+    terms[terms<br/>버전 관리]
+    consent[user_terms_consent_history<br/>동의 audit]
+    rt[refresh_tokens<br/>JWT refresh + rotation]
+    verify[email_verification_tokens<br/>password_reset_tokens]
+    phone[phone_verifications<br/>Redis 우선]
+    outbox[email_outbox<br/>PENDING → SENT]
+
+    users -->|user_id FK<br/>ON DELETE CASCADE| consent
+    terms -->|terms_id FK| consent
+    users -->|user_id FK<br/>CASCADE| rt
+    users -->|user_id FK<br/>CASCADE| verify
+    users -.->|phone 식별<br/>FK X| phone
+    users -.->|to_email<br/>FK X 시점 의존| outbox
+
+    style users fill:#fef3c7
+    style outbox fill:#dbeafe
+    style phone fill:#dbeafe
 ```
+
+> 💡 **FK 있음 (실선)** = ON DELETE CASCADE — user 삭제 시 같이.
+> 💡 **FK 없음 (점선)** = phone 은 가입 전 존재 / outbox 는 시점 의존 (email 변경 후에도 옛 발송 OK).
 
 ---
 
@@ -132,19 +203,46 @@ status VARCHAR(30) NOT NULL CHECK (status IN ('PENDING_VERIFICATION', 'ACTIVE', 
 
 ## 4. 트랜잭션 / 정합성
 
-### 4.1 한 트랜잭션 안의 INSERT 들
+### 4.1 가입 흐름 — 트랜잭션 경계
 
-가입 흐름:
-```sql
-BEGIN;
-  INSERT INTO users (...);                          -- 1
-  INSERT INTO user_terms_consent_history (...);     -- N (약관 수)
-COMMIT;
--- AFTER_COMMIT 후 별도 트랜잭션
-  INSERT INTO email_outbox (...);
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Controller
+    participant S as SignupUseCase
+    participant DB as PostgreSQL
+    participant L as Listener (AFTER_COMMIT)
+    participant W as OutboxWorker
+    participant SES as AWS SES
+
+    C->>S: signup(cmd)
+    rect rgb(254, 243, 199)
+    note right of S: @Transactional (한 단위)
+    S->>DB: INSERT users
+    S->>DB: INSERT user_terms_consent_history (N)
+    S->>S: publishEvent(UserRegistered)
+    end
+    DB-->>S: COMMIT
+    S-->>C: User 반환
+
+    rect rgb(219, 234, 254)
+    note right of L: AFTER_COMMIT (별도 트랜잭션)
+    L->>DB: INSERT email_outbox (PENDING)
+    end
+
+    loop 1초마다 polling
+        W->>DB: SELECT outbox WHERE status='PENDING'
+        W->>SES: send(template, payload)
+        SES-->>W: messageId
+        W->>DB: UPDATE outbox SET status='SENT'
+    end
 ```
 
-[[../transactions]] 의 트랜잭션 경계 결정.
+**왜 분리**
+- 비즈니스 commit 후 outbox INSERT — rollback 시 메일 발송 X (정합성).
+- SES 호출은 worker (별도 프로세스) — 비즈니스 트랜잭션에 외부 IO 영향 X.
+
+자세히: [[../transactions]] · [[email-outbox-table#3 Outbox 패턴]].
 
 ### 4.2 Race condition 의 진실의 원천
 
