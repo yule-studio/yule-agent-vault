@@ -541,14 +541,19 @@ public class HybridSmsClient implements SmsClient {
 본 vault 의 6-digit = "휴대폰 보유" 확인.
 실명 인증 (PASS / NICE) 은 별도 — 통신 3사 정보 기반 강한 식별.
 
-```
-POST /api/v1/auth/verify/identity/init
-   ↓ PASS / NICE redirect
-[사용자 본인 인증 (통신 3사 / 신용카드 / 공동인증서)]
-   ↓ callback
-서버: 이름·생년월일·휴대폰·CI/DI 추출
-   ↓
-user 에 저장 (CI UNIQUE — 한 사람 한 계정 보장)
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant API
+    participant IdP as PASS / NICE
+    participant DB
+
+    U->>API: POST /verify/identity/init
+    API-->>U: redirect to PASS / NICE
+    U->>IdP: 본인 인증 (통신 3사 / 신용카드 / 공동인증서)
+    IdP->>API: callback { 이름, 생년월일, 휴대폰, CI/DI }
+    API->>DB: user 에 저장 (CI UNIQUE)
+    note over DB: CI UNIQUE → 한 사람 한 계정
 ```
 
 **언제 필요**

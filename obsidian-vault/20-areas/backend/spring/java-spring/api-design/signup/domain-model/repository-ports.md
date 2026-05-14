@@ -95,19 +95,22 @@ public interface PasswordResetTokenRepository {
 
 ### 3.1 의존성 역전 (Dependency Inversion)
 
-```
-❌ 도메인이 JPA 의존
-[Domain] ──→ [JpaRepository]
-                  ↓
-              [PostgreSQL]
+```mermaid
+flowchart LR
+    subgraph Bad["❌ 도메인이 JPA 의존"]
+        D1[Domain] --> J1[JpaRepository]
+        J1 --> P1[(PostgreSQL)]
+    end
 
-✅ 의존성 역전
-[Domain] ──→ [Port (interface)]
-              ▲
-              │ implements
-[JpaAdapter] ─┘
-   ↓
-[PostgreSQL]
+    subgraph Good["✅ 의존성 역전"]
+        D2[Domain] --> Port[Port interface]
+        Adapter[JpaAdapter] -.implements.-> Port
+        Adapter --> P2[(PostgreSQL)]
+    end
+
+    style D1 fill:#fecaca
+    style D2 fill:#d1fae5
+    style Port fill:#fef3c7
 ```
 
 → ORM 변경 시 (JPA → MyBatis → JOOQ) **도메인 코드 0 변경**. Adapter 만 교체.

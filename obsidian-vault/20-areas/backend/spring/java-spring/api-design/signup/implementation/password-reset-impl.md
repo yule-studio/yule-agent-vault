@@ -15,23 +15,33 @@ tags:
 
 # auth §14 — 패스워드 리셋 구현
 
-**[[signup|↑ hub]]**  ·  ← [[token-refresh-impl]]  ·  → [[transactions]]
+**[[implementation|↑ implementation hub]]**
 
 > 패스워드 분실 시 이메일 (또는 SMS) 로 리셋 토큰 발송 → 새 패스워드 설정.
 > 핵심: **enumeration 차단** + **단일 사용 토큰** + **모든 RT 무효** + **outbox 발송**.
 
 ---
 
-## 1. API spec
+## 1. 흐름 개요
 
-```
-POST /api/v1/auth/password-reset/request    { email }
-   ↓
-이메일 발송 (outbox)
-   ↓
-POST /api/v1/auth/password-reset/confirm    { token, newPassword }
-   ↓
-패스워드 변경 + 모든 RT REVOKE
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant API as Backend
+    participant DB
+    participant SES
+
+    U->>API: POST /password-reset/request { email }
+    API->>DB: token 발급 + outbox enqueue
+    API-->>U: 200 (항상 동일 — enumeration 차단)
+    SES-->>U: 메일 (link 포함)
+
+    U->>U: 메일 클릭
+    U->>API: POST /password-reset/confirm { token, newPassword }
+    API->>DB: token consume (USED)
+    API->>DB: user.password_hash 변경
+    API->>DB: refresh_tokens revokeAllForUser
+    API-->>U: 200 password updated
 ```
 
 ### 1.1 Request

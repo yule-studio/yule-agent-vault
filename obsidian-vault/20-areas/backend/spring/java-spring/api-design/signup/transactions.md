@@ -201,14 +201,10 @@ public User handle(...) {
 
 ```
 Client → POST /signup { email: 'a@x', ... }
-              ↓
-         Network retry (timeout 받았는데 사실 서버는 성공)
-              ↓
-        POST /signup { email: 'a@x', ... } 다시
-              ↓
-         Server: existsByEmail = true → 409 응답
-              ↓
-         Client: 이미 등록된 줄 알았는데 처음인데? 혼동
+     → Network retry (timeout 받았는데 사실 서버는 성공)
+     → POST /signup { email: 'a@x', ... } 다시
+     → Server: existsByEmail = true → 409 응답
+     → Client: 이미 등록된 줄 알았는데 처음인데? 혼동
 ```
 
 같은 클라가 같은 요청 2번 = 같은 결과 (200 + 같은 userId) 가 정상.

@@ -16,7 +16,7 @@ tags:
 
 # 이메일 인증 모델 비교 — URL token / 6-digit code / 둘 다
 
-**[[signup|↑ signup hub]]**  ·  관련: [[email-verification-impl]] / [[design-decisions]]
+**[[implementation|↑ implementation hub]]**  ·  관련: [[email-verification-impl]] · [[../design-decisions/email-provider]]
 
 > "이메일 인증을 어떻게 구현할지" 의 모델 결정 — 자리수 / 형식 / 모델 별 trade-off + 본 vault 권장.
 
@@ -28,14 +28,19 @@ tags:
 
 가장 표준적. 이메일 안에 **검증 링크** + 긴 random token.
 
-```
-[클라] POST /auth/verify/email/request
-[메일] "이메일을 인증하려면 [링크] 클릭"
-       링크: https://shop.example.com/verify-email?token=9f4b3a2c...64bytes...
-[클라] 메일 링크 클릭
-[브라우저] /verify-email?token=... 페이지 로드
-[프론트] POST /auth/verify/email/confirm { token: "..." }
-[서버] 토큰 검증 + ACTIVE 전이
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant API
+    participant Mail as 메일함
+
+    U->>API: POST /verify/email/request
+    API->>Mail: 메일 발송 "[링크] 클릭"<br/>https://shop.example.com/verify-email?token=9f4b...
+    Mail-->>U: 메일 도착
+    U->>U: 링크 클릭 → /verify-email?token=...
+    U->>API: POST /verify/email/confirm { token }
+    API->>API: 토큰 검증 + ACTIVE 전이
+    API-->>U: 200 인증 완료
 ```
 
 **Token 형식 옵션**:

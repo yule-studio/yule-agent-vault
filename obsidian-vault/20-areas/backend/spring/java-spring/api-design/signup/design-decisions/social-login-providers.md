@@ -212,14 +212,14 @@ Jws<Claims> claims = Jwts.parser()
 
 ### 5.4 Token Revocation Webhook
 
-```
-Apple → webhook → 서버
-  POST /webhook/apple
-  { events: [{ type: "consent-revoked", sub: "..." }] }
-   ↓
-[서버]
-  users.findByAppleSub(sub).markRevoked()
-  refresh_tokens.revokeAllForUser(...)
+```mermaid
+sequenceDiagram
+    participant Apple
+    participant API as 서버
+
+    Apple->>API: webhook POST /webhook/apple<br/>{ events: [{ type: "consent-revoked", sub: "..." }] }
+    API->>API: users.findByAppleSub(sub).markRevoked()
+    API->>API: refresh_tokens.revokeAllForUser(...)
 ```
 
 **왜 필요**

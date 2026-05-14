@@ -413,13 +413,27 @@ spring:
 
 ### 무엇
 
-```
-사용자가 같은 refresh 로 동시 2 요청
-   ↓
-[Tx A]                    [Tx B]
-findByHash → ACTIVE       findByHash → ACTIVE
-markRotated               markRotated
-INSERT new RT             INSERT new RT          ← 둘 다 성공? 한쪽 실패?
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant A as Tx A
+    participant B as Tx B
+    participant DB
+
+    par 동시 2 요청 (같은 refresh)
+        U->>A: refresh(RT)
+        U->>B: refresh(RT)
+    end
+
+    A->>DB: findByHash
+    DB-->>A: ACTIVE
+    B->>DB: findByHash
+    DB-->>B: ACTIVE
+
+    A->>DB: markRotated + INSERT new RT
+    B->>DB: markRotated + INSERT new RT
+
+    note over DB: ⚠️ 둘 다 성공?<br/>또는 한쪽 실패?
 ```
 
 ### 해결

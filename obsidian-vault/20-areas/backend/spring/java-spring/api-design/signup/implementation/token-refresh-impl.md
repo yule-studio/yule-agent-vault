@@ -112,26 +112,26 @@ Content-Type: application/json
 
 ### 3.1 안 하면 무슨 문제
 
-```
-[RT_v1 사용] → 새 access 발급 + 같은 RT_v1 반환
-                  ↓
-공격자 RT_v1 탈취
-                  ↓
-정상 user 와 공격자 둘 다 RT_v1 사용 — 구분 불가능
-                  ↓
-공격자가 14일 동안 access 갱신 가능
+```mermaid
+flowchart TD
+    A["RT_v1 사용 → 새 access 발급 + 같은 RT_v1 반환"]
+    A --> B[공격자 RT_v1 탈취]
+    B --> C[정상 user 와 공격자 둘 다 RT_v1 사용<br/>구분 불가능]
+    C --> D["공격자가 14일 동안 access 갱신 가능 💸"]
+
+    style D fill:#fecaca
 ```
 
 ### 3.2 Rotation 후
 
-```
-[RT_v1 사용 → RT_v2 발급, RT_v1 = ROTATED]
-                  ↓
-공격자가 옛 RT_v1 사용 시도
-                  ↓
-서버: "ROTATED 인데 또 들어옴 = 도난 신호"
-                  ↓
-모든 RT revoke (안전 우선)
+```mermaid
+flowchart TD
+    A["RT_v1 사용 → RT_v2 발급, RT_v1 = ROTATED"]
+    A --> B[공격자가 옛 RT_v1 사용 시도]
+    B --> C["서버: 'ROTATED 인데 또 들어옴 = 도난 신호'"]
+    C --> D[모든 RT revoke 안전 우선]
+
+    style D fill:#d1fae5
 ```
 
 → **도난 감지 가능** + **공격자 사용 시 즉시 무력화**.
@@ -333,13 +333,16 @@ T4: 서버: ROTATED 감지 → 모든 RT revoke (오인)
 
 ### 7.3 다중 디바이스 — 한 device 의 도난
 
-```
-user 가 iPhone 의 RT_iPhone + Mac 의 RT_Mac 보유
-iPhone 의 RT_iPhone 도난
-공격자가 reuse 시도
-   ↓
-서버: revokeAllForUser → RT_iPhone + RT_Mac 모두 revoke
-user 의 Mac 도 강제 logout
+```mermaid
+flowchart TD
+    A[user 가 iPhone + Mac 보유<br/>RT_iPhone, RT_Mac]
+    A --> B[iPhone 의 RT_iPhone 도난]
+    B --> C[공격자가 reuse 시도]
+    C --> D["서버: revokeAllForUser<br/>RT_iPhone + RT_Mac 모두 revoke"]
+    D --> E[user 의 Mac 도 강제 logout]
+
+    style D fill:#fecaca
+    style E fill:#fef3c7
 ```
 
 **trade-off**

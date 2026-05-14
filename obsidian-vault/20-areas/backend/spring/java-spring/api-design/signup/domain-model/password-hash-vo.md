@@ -66,14 +66,14 @@ public final class User {
 
 ### 2.2 PasswordEncoder 가 게이트
 
-```
-[Controller] String rawPassword
-    ↓
-[Application] PasswordEncoder.encode(rawPassword)
-    ↓
-PasswordHash hash = new PasswordHash(encoded)        ← VO 가 형식 검증
-    ↓
-[Domain] User.changePassword(hash)
+```mermaid
+flowchart TD
+    Ctl["Controller<br/>String rawPassword"] --> App["Application<br/>PasswordEncoder.encode(rawPassword)"]
+    App --> VO["PasswordHash hash = new PasswordHash(encoded)<br/>← VO 가 형식 검증"]
+    VO --> Dom["Domain<br/>User.changePassword(hash)"]
+
+    style VO fill:#fef3c7
+    style Dom fill:#d1fae5
 ```
 
 평문 → hash 변환은 **Application layer 의 PasswordEncoder** 에서만. 도메인은 hash 만.
