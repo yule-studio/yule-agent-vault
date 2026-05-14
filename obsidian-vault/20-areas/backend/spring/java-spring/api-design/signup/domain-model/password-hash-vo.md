@@ -86,11 +86,16 @@ PasswordHash hash = new PasswordHash(encoded)        ← VO 가 형식 검증
 
 ```
 $argon2id$v=19$m=65536,t=3,p=4$qLKHe2v9...$abc123...
-└────┬───┘└───┬┘└────────┬────────┘└──┬──┘└──┬──┘
-     │       │           │            │      │
-   변종    버전        파라미터        salt    hash
-   (id)     (19)    (memory/time/par)        ((base64))
+[ 변종  ][버전][   파라미터   ][  salt ][  hash ]
 ```
+
+| 부분 | 의미 |
+| --- | --- |
+| `$argon2id` | 변종 — argon2i / argon2d / argon2id (hybrid) |
+| `$v=19` | 버전 |
+| `$m=65536,t=3,p=4` | 파라미터 — memory KB, iterations, parallelism |
+| `$qLKHe2v9...` | salt (base64) |
+| `$abc123...` | hash (base64) |
 
 ```java
 if (!value.startsWith("$argon2"))

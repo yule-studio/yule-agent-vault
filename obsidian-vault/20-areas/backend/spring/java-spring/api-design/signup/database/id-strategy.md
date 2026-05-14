@@ -37,11 +37,14 @@ tags:
 ## 2. ULID 란
 
 ```
-01HABCDEFGHJKMNPQRSTVWXYZ
-└────────┬──────┘└────┬────┘
-   timestamp(48b)  randomness(80b)
-   (10 char)      (16 char)
+01HABCDEFG HJKMNPQRSTVWXYZ
+[timestamp][   randomness  ]
 ```
+
+| 부분 | 길이 | 의미 |
+| --- | --- | --- |
+| timestamp | 10 char (48 bit) | millisecond 단위 unix time |
+| randomness | 16 char (80 bit) | 같은 ms 안 monotonic 보장 (라이브러리) |
 
 - **128 bit** (UUID 와 동일)
 - **base32 Crockford** — 26 char 표현 (`0-9A-Z`, 일부 제외)

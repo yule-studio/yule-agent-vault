@@ -36,14 +36,18 @@ tags:
 
 ## 2. Test Pyramid
 
-```
-            ┌──────────┐
-           /  E2E (소수) \    ← 비용 ↑, 신뢰 ↑ — 정말 critical 만
-          ├──────────────┤
-         / Integration   \    ← 진짜 DB / Redis / Testcontainers
-        ├──────────────────┤
-       /     Unit (다수)    \  ← 빠름 / 격리 / mockito
-      └──────────────────────┘
+```mermaid
+flowchart TB
+    E2E["E2E (5% — 소수)<br/>비용 ↑ / 신뢰 ↑ / critical 만"]
+    INT["Integration (25%)<br/>진짜 DB / Redis / Testcontainers"]
+    UNIT["Unit (70% — 다수)<br/>빠름 / 격리 / Mockito"]
+
+    UNIT --> INT
+    INT --> E2E
+
+    style E2E fill:#fecaca
+    style INT fill:#fed7aa
+    style UNIT fill:#d1fae5
 ```
 
 ### 2.1 본 vault 의 비율

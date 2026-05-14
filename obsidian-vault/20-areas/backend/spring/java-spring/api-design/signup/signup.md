@@ -37,11 +37,15 @@ tags:
 
 **회원가입부터 시작하는 auth 전체 흐름** 의 production-grade 구현. **이 폴더 하나만 복사해서 몇 가지 설정 / 비즈니스 정책만 조정하면 바로 운영 가능** 을 목표.
 
-```
-[회원가입] → [이메일·휴대폰 인증] → [로그인] → [토큰 갱신] → [패스워드 리셋]
-   │                │                  │           │              │
-   signup-impl   email/phone        login        token-refresh   password-reset
-                 verification         (JWT)
+```mermaid
+flowchart LR
+    A[회원가입<br/>signup-impl] --> B[이메일·휴대폰 인증<br/>email/phone verification]
+    B --> C[로그인<br/>login JWT]
+    C --> D[토큰 갱신<br/>token-refresh]
+    C --> E[패스워드 리셋<br/>password-reset]
+
+    style A fill:#fef3c7
+    style C fill:#dbeafe
 ```
 
 ---
@@ -100,27 +104,24 @@ tags:
 
 가장 일반적인 한국 SaaS 시나리오 (이메일/패스워드 + 휴대폰 인증) 기준:
 
-```
-1. [[design-decisions]]   ⭐ 인증 도구 (NCP SENS / SES / Argon2) 결정
-   ↓
-2. [[database]]            전체 schema 적용 (Flyway V1~V5)
-   ↓
-3. [[domain-model]]        Java 도메인 코드 복사 (User, Email, PasswordHash, ...)
-   ↓
-4. [[security]] + [[../../common/security-config]]
-   SecurityConfig / JwtTokenProvider 적용
-   ↓
-5. 필요한 feature 만 import:
-     [[signup-impl]]         → 회원가입
-     [[phone-verification-impl]]  → 휴대폰 인증 (필수면)
-     [[email-verification-impl]]  → 이메일 인증
-     [[login-impl]]          → 로그인
-     [[token-refresh-impl]]   → 갱신
-     [[password-reset-impl]] → 패스워드 리셋
-   ↓
-6. [[testing]] 의 시나리오 표대로 IT 작성
-   ↓
-7. [[operations]] 체크리스트 따라 배포
+```mermaid
+flowchart TD
+    A["1. design-decisions ⭐<br/>인증 도구 (NCP SENS / SES / Argon2) 결정"] --> B["2. database<br/>전체 schema 적용 (Flyway V1~V5)"]
+    B --> C["3. domain-model<br/>Java 도메인 코드 복사 (User, Email, PasswordHash)"]
+    C --> D["4. security + common/security-config<br/>SecurityConfig / JwtTokenProvider"]
+    D --> E["5. 필요한 feature import"]
+    E --> E1[signup-impl<br/>회원가입]
+    E --> E2[phone-verification-impl<br/>휴대폰 인증]
+    E --> E3[email-verification-impl<br/>이메일 인증]
+    E --> E4[login-impl<br/>로그인]
+    E --> E5[token-refresh-impl<br/>갱신]
+    E --> E6[password-reset-impl<br/>리셋]
+    E1 & E2 & E3 & E4 & E5 & E6 --> F["6. testing<br/>시나리오 표대로 IT 작성"]
+    F --> G["7. operations<br/>체크리스트 따라 배포"]
+
+    style A fill:#fef3c7
+    style D fill:#fecaca
+    style G fill:#dbeafe
 ```
 
 → **모든 feature 코드는 같은 도메인 모델 + 같은 응답 envelope 위에 동작**. 추가 작업이 최소화.
@@ -160,31 +161,61 @@ GET    /api/v1/me
 
 ### 4.2 도메인 객체
 
-```
-User  (Aggregate)
-├── id: UserId
-├── email: Email
-├── phone: Phone (옵션)
-├── passwordHash: PasswordHash
-├── name: String
-├── status: UserStatus
-└── createdAt: Instant
-  ↑ raises: UserRegistered / UserEmailVerified / UserPhoneVerified / UserPasswordChanged
+```mermaid
+classDiagram
+    class User {
+        <<Aggregate>>
+        +UserId id
+        +Email email
+        +Phone phone
+        +PasswordHash passwordHash
+        +String name
+        +UserStatus status
+        +Instant createdAt
+        +register() UserRegistered
+        +verifyEmail() UserEmailVerified
+        +changePassword() UserPasswordChanged
+    }
 
-VerificationToken           — 이메일 / 휴대폰 / 패스워드 리셋 공통 패턴
-├── id, userId, type (EMAIL/PHONE/PASSWORD_RESET)
-├── tokenHash 또는 code, status (ACTIVE/USED/...), issuedAt, expiresAt
+    class VerificationToken {
+        +TokenId id
+        +UserId userId
+        +Type type
+        +String tokenHash
+        +Status status
+        +Instant expiresAt
+    }
 
-RefreshToken
-├── id (jti), userId, tokenHash, status, expiresAt
+    class RefreshToken {
+        +RefreshTokenId id
+        +UserId userId
+        +String tokenHash
+        +Status status
+        +Instant expiresAt
+    }
+
+    User "1" --> "*" VerificationToken : ID 참조
+    User "1" --> "*" RefreshToken : ID 참조
+
+    note for VerificationToken "type: EMAIL / PHONE / PASSWORD_RESET<br/>3종 공통 패턴"
 ```
 
 ### 4.3 status 머신
 
-```
-PENDING_VERIFICATION ── verifyEmail() ──→ ACTIVE ──→ SUSPENDED / DELETED
-                       verifyPhone()       │
-                                            └── changePassword() / changeName()
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING_VERIFICATION : register()
+    PENDING_VERIFICATION --> ACTIVE : verifyEmail() / verifyPhone()
+    ACTIVE --> SUSPENDED : suspend()
+    ACTIVE --> DELETED : delete()
+    SUSPENDED --> ACTIVE : unsuspend()
+    SUSPENDED --> DELETED : delete()
+
+    note right of ACTIVE
+        ACTIVE 에서만 가능:
+        - changePassword()
+        - changeName()
+    end note
 ```
 
 ### 4.4 권장 도구 (자세히는 [[design-decisions]])

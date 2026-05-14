@@ -53,28 +53,24 @@ tags:
 
 ## 3. 운영 layer
 
-```
-┌────────────────────────────────────────┐
-│ Layer 1: Infrastructure                 │
-│  - AWS RDS / ElastiCache / ALB         │
-│  - Auto-scaling / Multi-AZ              │
-├────────────────────────────────────────┤
-│ Layer 2: Deployment                     │
-│  - Blue-green / Canary                  │
-│  - Database migration                   │
-├────────────────────────────────────────┤
-│ Layer 3: Configuration                  │
-│  - env / Vault / Secret Manager         │
-│  - Feature flag                         │
-├────────────────────────────────────────┤
-│ Layer 4: Observability                  │
-│  - Logs / Metrics / Traces              │
-│  - Alerts / Pager                       │
-├────────────────────────────────────────┤
-│ Layer 5: Incident Response              │
-│  - Runbook / Smoke test                 │
-│  - Postmortem                           │
-└────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["Layer 1: Infrastructure<br/>AWS RDS / ElastiCache / ALB<br/>Auto-scaling / Multi-AZ"]
+    L2["Layer 2: Deployment<br/>Blue-green / Canary<br/>Database migration"]
+    L3["Layer 3: Configuration<br/>env / Vault / Secret Manager<br/>Feature flag"]
+    L4["Layer 4: Observability<br/>Logs / Metrics / Traces<br/>Alerts / Pager"]
+    L5["Layer 5: Incident Response<br/>Runbook / Smoke test<br/>Postmortem"]
+
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
+    L4 --> L5
+
+    style L1 fill:#dbeafe
+    style L2 fill:#d1fae5
+    style L3 fill:#fef3c7
+    style L4 fill:#fed7aa
+    style L5 fill:#fecaca
 ```
 
 ---

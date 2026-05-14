@@ -65,11 +65,14 @@ public record UserId(@JsonValue String value) {
 ### 3.1 ULID 구조
 
 ```
-01HZJK3M2VABCDEFGHJKMNPQRS
-└────────┘└─────────────────┘
-  timestamp     random
-  (48 bit)      (80 bit)
+01HZJK3M2V ABCDEFGHJKMNPQRS
+[timestamp][      random    ]
 ```
+
+| 부분 | 길이 | 의미 |
+| --- | --- | --- |
+| timestamp | 10 char (48 bit) | millisecond, 시간순 정렬 보장 |
+| random | 16 char (80 bit) | 추측 불가 |
 
 - **timestamp 48 bit** — millisecond, 시간순 정렬 보장
 - **random 80 bit** — 추측 불가

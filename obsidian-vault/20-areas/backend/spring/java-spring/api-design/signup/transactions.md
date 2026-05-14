@@ -23,18 +23,37 @@ tags:
 
 ## 1. 트랜잭션 경계
 
-```
-@Transactional 시작 ──── SignupUseCase.handle
-                          ├─ passwordPolicy.validate           (예외 X = OK)
-                          ├─ users.existsByEmail               (READ — 1차 검증)
-                          ├─ User.register(...)                (도메인 — DB 호출 X)
-                          ├─ users.save(user)                  (INSERT)
-                          ├─ termsConsent.save(...)            (INSERT — history)
-                          └─ events.publishEvent(...)          (in-memory 큐잉만)
-@Transactional 커밋 ──── DB COMMIT (1 + N 개 row)
-                          └─ @TransactionalEventListener(AFTER_COMMIT)
-                              └─ outbox.enqueue(...)            (새 트랜잭션 또는 별도 DB)
-별도 워커 (분리 프로세스) ── outbox row 픽업 → SMTP / SES 발송
+```mermaid
+sequenceDiagram
+    autonumber
+    participant UC as SignupUseCase
+    participant DB as PostgreSQL
+    participant L as Listener
+    participant Outbox as email_outbox
+    participant W as Worker
+    participant SES as SES / SMTP
+
+    rect rgb(254, 243, 199)
+    note over UC,DB: @Transactional (1 단위)
+    UC->>UC: passwordPolicy.validate
+    UC->>DB: existsByEmail (READ 1차)
+    UC->>UC: User.register (도메인 — DB X)
+    UC->>DB: users INSERT
+    UC->>DB: user_terms_consent_history INSERT (N)
+    UC->>UC: publishEvent (in-memory 큐잉만)
+    DB-->>UC: COMMIT (1+N row)
+    end
+
+    rect rgb(219, 234, 254)
+    note over L,Outbox: AFTER_COMMIT (별도 트랜잭션)
+    L->>Outbox: outbox.enqueue
+    end
+
+    note over W,SES: 별도 워커 (분리 프로세스)
+    W->>Outbox: findPending
+    W->>SES: send(template, payload)
+    SES-->>W: messageId
+    W->>Outbox: markSent
 ```
 
 ### 1.1 트랜잭션 범위 — 왜 이 범위인가
@@ -100,22 +119,29 @@ public record SignupRequest(
 
 ### 4.1 시나리오 — 같은 이메일 2 요청
 
-```
-시간 →
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as 요청 A (Thread-1)
+    participant B as 요청 B (Thread-2)
+    participant DB as PostgreSQL
 
-요청 A (Thread-1)               요청 B (Thread-2)
-  ↓                                ↓
-existsByEmail('a@x') → false    existsByEmail('a@x') → false
-  ↓                                ↓
-User.register(...)              User.register(...)
-  ↓                                ↓
-users.save(user_A)              users.save(user_B)
-  ↓                                ↓
-INSERT 성공                      INSERT 실패 (UNIQUE 위반)
-  ↓                                ↓
-COMMIT                          DataIntegrityViolationException
-                                  ↓
-                                EmailAlreadyExistsException → 409
+    par 동시 실행
+        A->>DB: existsByEmail('a@x')
+        DB-->>A: false
+        B->>DB: existsByEmail('a@x')
+        DB-->>B: false
+    end
+
+    A->>A: User.register
+    B->>B: User.register
+
+    A->>DB: users INSERT
+    DB-->>A: ✅ COMMIT
+    B->>DB: users INSERT
+    DB-->>B: ❌ UNIQUE 위반
+
+    note over B: DataIntegrityViolationException<br/>→ EmailAlreadyExistsException → 409
 ```
 
 → **1차 application 검증은 친절한 UX 메시지**, **DB UNIQUE 가 진실의 원천**.

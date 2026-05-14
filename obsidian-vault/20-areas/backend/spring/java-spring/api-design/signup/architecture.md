@@ -40,62 +40,65 @@ tags:
 
 ## 2. 의존성 흐름 — 전체
 
-```
-[Client HTTP]
-   │
-   ▼
-┌─────────────────────────────────────────────┐
-│ Presentation                                 │
-│   SignupController                           │
-│   SignupRequest / SignupResponse (records)   │
-│   ApiExceptionHandler  (@RestControllerAdvice)│
-└─────────────┬───────────────────────────────┘
-              │ DTO → Command
-              ▼
-┌─────────────────────────────────────────────┐
-│ Application                                  │
-│   SignupUseCase  (@Service, @Transactional)  │
-│   SignupCommand  (record)                    │
-│   PasswordPolicy                             │
-└─────────────┬───────────────────────────────┘
-              │ Domain 호출 + port 사용
-              ▼
-┌─────────────────────────────────────────────┐
-│ Domain (가장 안쪽 — framework X)              │
-│   User (Aggregate)                           │
-│   Email / PasswordHash / UserId (Value Obj)  │
-│   UserStatus / DomainEvent (sealed)           │
-│   UserRepository (port interface)            │
-│   PasswordEncoder (port interface)           │
-└─────────────────────────────────────────────┘
-              ▲                       ▲
-              │ implements            │ implements
-              │                       │
-┌─────────────┴───────────┐  ┌────────┴────────────────┐
-│ Infrastructure /        │  │ Infrastructure /        │
-│ Persistence (JPA)       │  │ Security                │
-│                         │  │                         │
-│ UserJpaEntity           │  │ Argon2PasswordEncoder   │
-│ UserJpaRepository       │  │                         │
-│ JpaUserRepositoryAdapter│  └─────────────────────────┘
-└─────────────┬───────────┘
-              │ JDBC / SQL
-              ▼
-        [PostgreSQL]
+```mermaid
+flowchart TD
+    Client[Client HTTP]
+    Client --> P
 
-         (트랜잭션 커밋 후)
-              │
-              ▼
-┌─────────────────────────────────────────────┐
-│ Infrastructure / Messaging                    │
-│   UserRegisteredEmailListener                  │
-│     @TransactionalEventListener(AFTER_COMMIT)  │
-│     → EmailOutboxRepository.enqueue            │
-└─────────────────────────────────────────────┘
-              │
-              ▼
-        [별도 워커가 SMTP / SES 발송]
+    subgraph P["Presentation"]
+        Controller[SignupController]
+        DTO[SignupRequest / SignupResponse]
+        Handler["ApiExceptionHandler<br/>@RestControllerAdvice"]
+    end
+
+    P -->|DTO → Command| App
+
+    subgraph App["Application"]
+        UC["SignupUseCase<br/>@Service @Transactional"]
+        Cmd[SignupCommand]
+        Policy[PasswordPolicy]
+    end
+
+    App -->|Domain 호출 + port 사용| Domain
+
+    subgraph Domain["Domain (가장 안쪽 — framework X)"]
+        User[User Aggregate]
+        VO[Email / PasswordHash / UserId VO]
+        Status[UserStatus / DomainEvent sealed]
+        RepoPort[UserRepository port]
+        EncPort[PasswordEncoder port]
+    end
+
+    subgraph Infra1["Infrastructure / Persistence"]
+        JpaEntity[UserJpaEntity]
+        JpaRepo[UserJpaRepository]
+        JpaAdapter[JpaUserRepositoryAdapter]
+    end
+
+    subgraph Infra2["Infrastructure / Security"]
+        Argon[Argon2PasswordEncoder]
+    end
+
+    JpaAdapter -.->|implements| RepoPort
+    Argon -.->|implements| EncPort
+
+    JpaAdapter -->|JDBC / SQL| DB[(PostgreSQL)]
+
+    Domain -.->|AFTER_COMMIT event| Listener
+
+    subgraph Listener["Infrastructure / Messaging"]
+        EmailL["UserRegisteredEmailListener<br/>@TransactionalEventListener(AFTER_COMMIT)"]
+    end
+
+    Listener --> Outbox[(email_outbox)]
+    Outbox -->|별도 워커| SES[SMTP / SES]
+
+    style Domain fill:#fef3c7
+    style Client fill:#dbeafe
+    style DB fill:#fecaca
 ```
+
+> 💡 **점선 (`-.->`)** = "implements" (의존 방향이 안쪽). 의존성은 **바깥 → 안쪽** 으로만.
 
 ---
 

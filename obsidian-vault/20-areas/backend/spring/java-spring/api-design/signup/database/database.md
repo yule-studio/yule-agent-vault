@@ -203,46 +203,19 @@ status VARCHAR(30) NOT NULL CHECK (status IN ('PENDING_VERIFICATION', 'ACTIVE', 
 
 ## 4. 트랜잭션 / 정합성
 
-### 4.1 가입 흐름 — 트랜잭션 경계
+### 4.1 한 트랜잭션 안의 INSERT 들
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant C as Controller
-    participant S as SignupUseCase
-    participant DB as PostgreSQL
-    participant L as Listener (AFTER_COMMIT)
-    participant W as OutboxWorker
-    participant SES as AWS SES
-
-    C->>S: signup(cmd)
-    rect rgb(254, 243, 199)
-    note right of S: @Transactional (한 단위)
-    S->>DB: INSERT users
-    S->>DB: INSERT user_terms_consent_history (N)
-    S->>S: publishEvent(UserRegistered)
-    end
-    DB-->>S: COMMIT
-    S-->>C: User 반환
-
-    rect rgb(219, 234, 254)
-    note right of L: AFTER_COMMIT (별도 트랜잭션)
-    L->>DB: INSERT email_outbox (PENDING)
-    end
-
-    loop 1초마다 polling
-        W->>DB: SELECT outbox WHERE status='PENDING'
-        W->>SES: send(template, payload)
-        SES-->>W: messageId
-        W->>DB: UPDATE outbox SET status='SENT'
-    end
+가입 흐름:
+```sql
+BEGIN;
+  INSERT INTO users (...);                          -- 1
+  INSERT INTO user_terms_consent_history (...);     -- N (약관 수)
+COMMIT;
+-- AFTER_COMMIT 후 별도 트랜잭션
+  INSERT INTO email_outbox (...);
 ```
 
-**왜 분리**
-- 비즈니스 commit 후 outbox INSERT — rollback 시 메일 발송 X (정합성).
-- SES 호출은 worker (별도 프로세스) — 비즈니스 트랜잭션에 외부 IO 영향 X.
-
-자세히: [[../transactions]] · [[email-outbox-table#3 Outbox 패턴]].
+[[../transactions]] 의 트랜잭션 경계 결정.
 
 ### 4.2 Race condition 의 진실의 원천
 

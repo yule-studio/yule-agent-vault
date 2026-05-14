@@ -54,31 +54,25 @@ tags:
 
 ## 3. 보안 layer
 
-```
-┌────────────────────────────────────────────┐
-│ Layer 1: 네트워크                          │
-│  - WAF (AWS WAF / Cloudflare)              │
-│  - TLS 1.2+                                │
-│  - Cert (ACM / Let's Encrypt)              │
-├────────────────────────────────────────────┤
-│ Layer 2: HTTP / Transport                  │
-│  - CORS / HSTS / CSP / X-Frame-Options     │
-│  - Rate limit (Bucket4j + Redis)           │
-├────────────────────────────────────────────┤
-│ Layer 3: 인증 / 인가 (Spring Security)     │
-│  - filter chain                            │
-│  - JWT 검증                                 │
-│  - 권한 (role) 매트릭스                     │
-├────────────────────────────────────────────┤
-│ Layer 4: Application                       │
-│  - Bean Validation                         │
-│  - 도메인 검증 (VO)                         │
-│  - 트랜잭션 / 동시성                        │
-├────────────────────────────────────────────┤
-│ Layer 5: Data                              │
-│  - DB CHECK / UNIQUE / FK                  │
-│  - 암호화 (RDS at-rest / column / hash)    │
-└────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    L1["Layer 1: 네트워크<br/>WAF (AWS WAF / Cloudflare)<br/>TLS 1.2+<br/>Cert (ACM / Let's Encrypt)"]
+    L2["Layer 2: HTTP / Transport<br/>CORS / HSTS / CSP / X-Frame-Options<br/>Rate limit (Bucket4j + Redis)"]
+    L3["Layer 3: 인증 / 인가 (Spring Security)<br/>filter chain<br/>JWT 검증<br/>권한 (role) 매트릭스"]
+    L4["Layer 4: Application<br/>Bean Validation<br/>도메인 검증 (VO)<br/>트랜잭션 / 동시성"]
+    L5["Layer 5: Data<br/>DB CHECK / UNIQUE / FK<br/>암호화 (RDS at-rest / column / hash)"]
+
+    Client[Client 요청] --> L1
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
+    L4 --> L5
+
+    style L1 fill:#fecaca
+    style L2 fill:#fed7aa
+    style L3 fill:#fef3c7
+    style L4 fill:#d1fae5
+    style L5 fill:#dbeafe
 ```
 
 → **다층 방어**. 한 layer 우회 시 다음 layer 가 잡음.

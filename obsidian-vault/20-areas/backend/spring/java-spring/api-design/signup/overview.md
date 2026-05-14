@@ -23,48 +23,37 @@ tags:
 
 ## 1. 사용자 여정 (User Journey)
 
-```
-[ 첫 방문 ]
-    │
-    ▼
-[ 회원가입 폼 ] ── 이메일·패스워드·약관 동의 ──→ POST /auth/signup
-                                                       │
-                                                       ▼
-                                              user.status = PENDING_VERIFICATION
-                                                       │
-                                                       ▼
-                                              UserRegistered event → outbox
-                                                       │
-                                                       ▼
-                                              이메일 발송 (별도 워커)
-                                                       │
-                                                       ▼
-[ 메일 박스 ] ── "이메일 인증" 링크 클릭 ──→ POST /auth/verify/email/confirm
-                                                       │
-                                                       ▼
-                                              user.status = ACTIVE
-                                                       │
-                                                       ▼
-[ 로그인 폼 ] ── 이메일·패스워드 ──→ POST /auth/login
-                                                       │
-                                                       ▼
-                                              access (15m) + refresh (14d, rotation)
-                                                       │
-                                                       ▼
-[ 정상 사용 ] ── access 만료시 ──→ POST /auth/token/refresh
-                                                       │
-                                                       ▼
-                                              new access + new refresh (rotation)
+```mermaid
+flowchart TD
+    Visit[첫 방문] --> SignupForm[회원가입 폼]
+    SignupForm -->|이메일·패스워드·약관| Signup["POST /auth/signup"]
+    Signup --> Pending["user.status = PENDING_VERIFICATION"]
+    Pending --> Event[UserRegistered event → outbox]
+    Event --> SendMail[이메일 발송 별도 워커]
+    SendMail --> MailBox[메일 박스]
+    MailBox -->|인증 링크 클릭| EmailConfirm["POST /auth/verify/email/confirm"]
+    EmailConfirm --> Active["user.status = ACTIVE"]
 
-[ 로그아웃 ] ──→ POST /auth/logout    (refresh REVOKED)
+    Active --> LoginForm[로그인 폼]
+    LoginForm -->|이메일·패스워드| Login["POST /auth/login"]
+    Login --> Tokens["access 15m + refresh 14d rotation"]
+    Tokens --> Use[정상 사용]
 
-[ 패스워드 분실 ] ──→ POST /auth/password-reset/request    (이메일 / 휴대폰)
-                                                       │
-                                                       ▼
-[ 메일·SMS ] ── 토큰 / 인증번호 ──→ POST /auth/password-reset/confirm
-                                                       │
-                                                       ▼
-                                              passwordHash 갱신 + 모든 refresh 무효
+    Use -->|access 만료| Refresh["POST /auth/token/refresh"]
+    Refresh --> NewTokens[new access + new refresh rotation]
+    NewTokens --> Use
+
+    Use -->|로그아웃| Logout["POST /auth/logout"]
+    Logout --> RevokeRT[refresh REVOKED]
+
+    Use -.->|패스워드 분실| ResetReq["POST /auth/password-reset/request"]
+    ResetReq --> MailSms[메일 또는 SMS]
+    MailSms -->|토큰 클릭| ResetConfirm["POST /auth/password-reset/confirm"]
+    ResetConfirm --> Reset[passwordHash 갱신 + 모든 refresh 무효]
+
+    style Active fill:#dbeafe
+    style Pending fill:#fef3c7
+    style Reset fill:#fecaca
 ```
 
 ---
@@ -73,30 +62,31 @@ tags:
 
 한국 SaaS 는 보통 **휴대폰 인증을 가입 전제** 로 함 (SMS / AlimTalk).
 
-```
-[ 가입 폼 ]
-    │
-    ▼
-1. 사용자가 휴대폰 번호 입력
-    │
-    ▼
-2. POST /auth/verify/phone/request  { phone: "010-0000-0000" }
-    │
-    ▼ (NCP SENS / AlimTalk)
-3. 사용자 휴대폰에 6자리 인증번호 SMS
-    │
-    ▼
-4. POST /auth/verify/phone/confirm  { phone, code }
-    │
-    ▼
-5. Redis 에 verifiedAt 마킹 (TTL 10분)
-    │
-    ▼
-6. POST /auth/signup  { ..., phone, phoneAuthToken }
-    │
-    └─ 서버: phoneAuthToken 검증 (verifiedAt 존재 + 10분 이내)
-       │
-       └─ 통과 시 user 생성 + phone 컬럼 저장
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 사용자
+    participant Web as 가입 폼
+    participant API as Backend
+    participant Redis
+    participant SMS as NCP SENS / AlimTalk
+
+    User->>Web: 휴대폰 번호 입력
+    Web->>API: POST /auth/verify/phone/request<br/>{ phone: "010-0000-0000" }
+    API->>SMS: 6자리 코드 발송
+    SMS-->>User: 인증번호 SMS
+
+    User->>Web: 6자리 코드 입력
+    Web->>API: POST /auth/verify/phone/confirm<br/>{ phone, code }
+    API->>Redis: verifiedAt 마킹 (TTL 10분)
+    API-->>Web: phoneAuthToken 발급
+
+    User->>Web: 회원가입 폼 작성
+    Web->>API: POST /auth/signup<br/>{ ..., phone, phoneAuthToken }
+    API->>Redis: phoneAuthToken 검증 (10분 이내?)
+    Redis-->>API: OK
+    API->>API: user 생성 + phone 저장
+    API-->>Web: 가입 완료
 ```
 
 상세: [[phone-verification-impl]].
@@ -105,51 +95,41 @@ tags:
 
 ## 3. 도메인 / 인프라 의존성 그림
 
-```
-                        ┌────────────────────────┐
-                        │  Spring Security        │
-                        │  + JwtAuthFilter        │
-                        │  (모든 endpoint 가 통과)  │
-                        └───────┬────────────────┘
-                                │
-              ┌─────────────────┼────────────────────┐
-              │                 │                    │
-              ▼                 ▼                    ▼
-        ┌──────────┐      ┌──────────┐         ┌──────────┐
-        │ SignupCtl│      │ LoginCtl │  ...    │  MeCtl   │
-        └────┬─────┘      └────┬─────┘         └────┬─────┘
-             │                 │                    │
-             ▼                 ▼                    ▼
-        ┌──────────┐      ┌──────────┐         ┌──────────┐
-        │ SignupUC │      │ LoginUC  │         │ User Q   │
-        │ (Tx)     │      │ (Tx)     │         │ Service  │
-        └────┬─────┘      └────┬─────┘         └────┬─────┘
-             │                 │                    │
-             ▼                 ▼                    │
-        ┌────────────────────────────────┐         │
-        │  Domain  (User Aggregate)       │ ←───────┘
-        │  Email / PasswordHash / ...     │
-        └─────────────┬───────────────────┘
-                      │
-              ┌───────┴────────┐
-              ▼                ▼
-        ┌──────────┐     ┌──────────────┐
-        │UserRepo │     │ Refresh Repo  │
-        │ (port)  │     │ (port)        │
-        └────┬────┘     └──────┬───────┘
-             ▼                  ▼
-        ┌──────────────┐ ┌──────────────┐
-        │ JpaUserAdapter│ │ JpaRefresh   │
-        └─────┬─────────┘ │ Adapter      │
-              │           └──────┬──────┘
-              ▼                  ▼
-              └──────PostgreSQL──┘
+```mermaid
+flowchart TD
+    Security["Spring Security<br/>+ JwtAuthFilter<br/>(모든 endpoint 가 통과)"]
+    Security --> SignupCtl[SignupCtl]
+    Security --> LoginCtl[LoginCtl]
+    Security --> MeCtl[MeCtl]
 
-         + 외부:
-         - AWS SES / SendGrid    (이메일)
-         - NCP SENS / AlimTalk    (SMS)
-         - Apple/Google/Kakao API (소셜)
+    SignupCtl --> SignupUC["SignupUC<br/>@Transactional"]
+    LoginCtl --> LoginUC["LoginUC<br/>@Transactional"]
+    MeCtl --> UserQ[User Query Service]
+
+    SignupUC --> Domain
+    LoginUC --> Domain
+    UserQ --> Domain
+
+    Domain["Domain<br/>User Aggregate / Email / PasswordHash / VO"]
+    Domain --> UserRepo[UserRepository port]
+    Domain --> RtRepo[RefreshTokenRepository port]
+
+    UserRepo -.->|implements| JpaUser[JpaUserAdapter]
+    RtRepo -.->|implements| JpaRt[JpaRefreshAdapter]
+
+    JpaUser --> DB[(PostgreSQL)]
+    JpaRt --> DB
+
+    SignupUC -.-> SES[AWS SES / SendGrid<br/>이메일]
+    SignupUC -.-> NCP[NCP SENS / AlimTalk<br/>SMS]
+    LoginUC -.-> Social[Apple / Google / Kakao API<br/>소셜]
+
+    style Domain fill:#fef3c7
+    style DB fill:#fecaca
+    style Security fill:#dbeafe
 ```
+
+> 💡 **점선** = 외부 / implements 관계. **실선** = 직접 호출.
 
 ---
 

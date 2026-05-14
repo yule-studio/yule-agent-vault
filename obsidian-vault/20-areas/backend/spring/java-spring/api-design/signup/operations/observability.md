@@ -262,30 +262,43 @@ management:
 
 ### 6.1 본 vault 의 표준 대시보드
 
-```
-┌────────────────────────────────────────┐
-│ Auth Overview                          │
-├────────────────────────────────────────┤
-│ Signup rate (/min) | Login rate        │
-│ Success rate %     | Failure rate %    │
-│ p95 latency        | p99 latency       │
-├────────────────────────────────────────┤
-│ Detailed metrics                       │
-│  - Signup by result                    │
-│  - Login by result                     │
-│  - Email outbox queue                  │
-│  - Token refresh rate                  │
-├────────────────────────────────────────┤
-│ Security                                │
-│  - Failed login by IP (top 10)         │
-│  - Reuse detection events              │
-│  - Account lock count                  │
-├────────────────────────────────────────┤
-│ Infra                                   │
-│  - DB connection pool                  │
-│  - JVM heap                            │
-│  - Network latency                     │
-└────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Overview["Auth Overview"]
+        O1[Signup rate /min]
+        O2[Login rate]
+        O3[Success rate %]
+        O4[Failure rate %]
+        O5[p95 latency]
+        O6[p99 latency]
+    end
+
+    subgraph Detailed["Detailed Metrics"]
+        D1[Signup by result]
+        D2[Login by result]
+        D3[Email outbox queue]
+        D4[Token refresh rate]
+    end
+
+    subgraph Security["Security"]
+        S1[Failed login by IP top 10]
+        S2[Reuse detection events]
+        S3[Account lock count]
+    end
+
+    subgraph Infra["Infra"]
+        I1[DB connection pool]
+        I2[JVM heap]
+        I3[Network latency]
+    end
+
+    Overview --> Detailed
+    Detailed --> Security
+    Security --> Infra
+
+    style Overview fill:#dbeafe
+    style Security fill:#fecaca
+    style Infra fill:#fef3c7
 ```
 
 ---

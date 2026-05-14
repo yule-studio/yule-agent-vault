@@ -36,20 +36,38 @@ tags:
 
 ## 2. auth 도메인의 Aggregate 5종
 
-```
-┌──────────────┐  ┌─────────────────┐  ┌────────────────────┐
-│ User         │  │ RefreshToken    │  │ EmailVerification  │
-│ (Root)       │  │ (Root)          │  │ Token (Root)       │
-│              │  │                 │  │                    │
-│  - Email     │  │  - userId 참조  │  │  - userId 참조     │
-│  - Phone     │  │  - tokenHash    │  │  - tokenHash       │
-│  - status    │  │                 │  │                    │
-└──────────────┘  └─────────────────┘  └────────────────────┘
+```mermaid
+classDiagram
+    class User {
+        <<Aggregate Root>>
+        Email
+        Phone
+        status
+    }
+    class RefreshToken {
+        <<Aggregate Root>>
+        UserId (참조)
+        tokenHash
+    }
+    class EmailVerificationToken {
+        <<Aggregate Root>>
+        UserId (참조)
+        tokenHash
+    }
+    class PhoneVerificationCode {
+        <<Aggregate Root>>
+        phone (가입 전)
+        codeHash
+    }
+    class PasswordResetToken {
+        <<Aggregate Root>>
+        UserId (참조)
+        tokenHash
+    }
 
-┌────────────────────┐  ┌──────────────────────┐
-│ PhoneVerification  │  │ PasswordResetToken   │
-│ Code (Root)        │  │ (Root)               │
-└────────────────────┘  └──────────────────────┘
+    User <.. RefreshToken : ID 참조
+    User <.. EmailVerificationToken : ID 참조
+    User <.. PasswordResetToken : ID 참조
 ```
 
 → **5 개 Aggregate**. 서로 ID 참조 (`userId`) 로만 연결.

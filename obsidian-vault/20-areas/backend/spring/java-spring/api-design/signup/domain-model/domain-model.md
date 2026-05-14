@@ -44,84 +44,140 @@ tags:
 
 ## 2. 도메인 그림 (high-level)
 
+```mermaid
+classDiagram
+    class User {
+        <<Aggregate Root>>
+        +UserId id
+        +Email email
+        +Phone phone
+        +PasswordHash passwordHash
+        +String name
+        +UserStatus status
+        +Role role
+        +SocialProviderType providerType
+        +Instant createdAt
+        +register()$ User
+        +verifyEmail()
+        +verifyPhone()
+        +changePassword(hash)
+        +suspend()
+        +unsuspend()
+        +delete()
+    }
+
+    class DomainEvent {
+        <<sealed interface>>
+    }
+
+    class UserRegistered
+    class UserEmailVerified
+    class UserPhoneVerified
+    class UserPasswordChanged
+    class UserSuspended
+
+    class RefreshToken {
+        <<Aggregate>>
+        +RefreshTokenId id
+        +UserId userId
+        +String tokenHash
+        +RefreshTokenStatus status
+        +Instant expiresAt
+        +RefreshTokenId rotatedToId
+    }
+
+    class VerificationToken {
+        <<3 종 sealed>>
+    }
+    class EmailVerificationToken
+    class PhoneVerificationCode
+    class PasswordResetToken
+
+    User --> DomainEvent : raises
+    DomainEvent <|-- UserRegistered
+    DomainEvent <|-- UserEmailVerified
+    DomainEvent <|-- UserPhoneVerified
+    DomainEvent <|-- UserPasswordChanged
+    DomainEvent <|-- UserSuspended
+
+    VerificationToken <|-- EmailVerificationToken
+    VerificationToken <|-- PhoneVerificationCode
+    VerificationToken <|-- PasswordResetToken
+
+    User <.. RefreshToken : UserId 참조
+    User <.. VerificationToken : UserId 참조
 ```
-┌─────────────────────────────────────────┐
-│  User (Aggregate Root)                  │
-│  - id: UserId          ←──── ULID       │
-│  - email: Email        ←──── Value Obj  │
-│  - phone: Phone (옵션)                  │
-│  - passwordHash: PasswordHash           │
-│  - name: String                         │
-│  - status: UserStatus  ←──── enum       │
-│  - role: Role          ←──── enum       │
-│  - providerType: SocialProviderType     │
-│  - createdAt: Instant                   │
-│                                          │
-│  + register(...) → static               │
-│  + verifyEmail()                        │
-│  + verifyPhone()                        │
-│  + changePassword(...)                  │
-│  + suspend() / unsuspend() / delete()   │
-│                                          │
-│  raises DomainEvent ──→  ┐              │
-└──────────────────────────┼──────────────┘
-                            │
-                            ▼
-                ┌──────────────────────┐
-                │ UserRegistered       │
-                │ UserEmailVerified    │
-                │ UserPhoneVerified    │
-                │ UserPasswordChanged  │
-                │ UserSuspended        │
-                └──────────────────────┘
 
-┌─────────────────────────────────────────┐
-│  RefreshToken (Aggregate)               │
-│  - id: RefreshTokenId (jti)             │
-│  - userId: UserId (외부 Aggregate 참조)   │
-│  - tokenHash: String                    │
-│  - status: RefreshTokenStatus           │
-│  - expiresAt: Instant                   │
-│  - rotatedToId: RefreshTokenId?          │
-└─────────────────────────────────────────┘
+### 2.1 Repository Ports (domain interface)
 
-┌─────────────────────────────────────────┐
-│  VerificationToken (3 종)                │
-│  - EmailVerificationToken               │
-│  - PhoneVerificationCode (6-digit + lock)│
-│  - PasswordResetToken                   │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph "Domain (port interface)"
+        UR[UserRepository]
+        RTR[RefreshTokenRepository]
+        EVR[EmailVerificationTokenRepository]
+        PVR[PhoneVerificationCodeRepository]
+        PRR[PasswordResetTokenRepository]
+    end
 
-┌─────────────────────────────────────────┐
-│  Repository Ports (domain interface)    │
-│  - UserRepository                       │
-│  - RefreshTokenRepository               │
-│  - EmailVerificationTokenRepository     │
-│  - PhoneVerificationCodeRepository      │
-│  - PasswordResetTokenRepository         │
-└─────────────────────────────────────────┘
+    subgraph "Infrastructure (adapter)"
+        JpaUser[JpaUserAdapter]
+        JpaRt[JpaRefreshAdapter]
+        JpaEv[JpaEmailVerificationAdapter]
+        RedisPv[RedisPhoneAdapter]
+        JpaPr[JpaPasswordResetAdapter]
+    end
+
+    JpaUser -.implements.-> UR
+    JpaRt -.implements.-> RTR
+    JpaEv -.implements.-> EVR
+    RedisPv -.implements.-> PVR
+    JpaPr -.implements.-> PRR
 ```
 
 ---
 
 ## 3. 상태 머신 (high-level)
 
-```
-[User]
-   PENDING_VERIFICATION ──verifyEmail──→ ACTIVE ──suspend──→ SUSPENDED ──unsuspend──→ ACTIVE
-                                            │                    │
-                                            └─────── delete ─────┴──→ DELETED (종착)
+### 3.1 User
 
-[RefreshToken]
-   ACTIVE ──rotate──→ ROTATED          ←─ reuse 감지 시
-   ACTIVE ──revoke──→ REVOKED          ←─ logout / 패스워드 변경
-   ACTIVE ──expire──→ EXPIRED          ←─ TTL 지남
-
-[VerificationToken]
-   ACTIVE ──consume──→ USED            ←─ 정상 사용
-   ACTIVE ──revoke ──→ REVOKED         ←─ 재발송
-   ACTIVE ──expire ──→ EXPIRED         ←─ TTL
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING_VERIFICATION : register()
+    PENDING_VERIFICATION --> ACTIVE : verifyEmail() / verifyPhone()
+    ACTIVE --> SUSPENDED : suspend()
+    SUSPENDED --> ACTIVE : unsuspend()
+    ACTIVE --> DELETED : delete()
+    SUSPENDED --> DELETED : delete()
+    DELETED --> [*]
 ```
+
+### 3.2 RefreshToken
+
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE : issue()
+    ACTIVE --> ROTATED : rotate()
+    ACTIVE --> REVOKED : revoke() (logout / 패스워드 변경)
+    ACTIVE --> EXPIRED : TTL 지남
+    ROTATED --> REVOKED : reuse 감지 시 (모든 RT)
+    note right of ROTATED
+        ROTATED 재사용 = 도난 신호
+        → chain 전체 REVOKED
+    end note
+```
+
+### 3.3 VerificationToken (3종 공통)
+
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE : issue()
+    ACTIVE --> USED : consume() (정상 사용)
+    ACTIVE --> REVOKED : revoke() (재발송)
+    ACTIVE --> EXPIRED : TTL 지남
+```
+
+각 상태 / 전이 상세: [[../enums/user-status]] · [[../enums/refresh-token-status]] · [[../enums/verification-token-status]].
 
 각 상태 / 전이 상세: [[../enums/user-status]] · [[../enums/refresh-token-status]] · [[../enums/verification-token-status]].
 
@@ -129,19 +185,25 @@ tags:
 
 ## 4. 의존 관계
 
-```
-Aggregate Root (User, RefreshToken, VerificationToken)
-       │ 사용
-       ▼
-Value Objects (Email, PasswordHash, UserId, PhoneNumber)
-       │ raises
-       ▼
-Domain Events (UserRegistered, ...)
-       │ 구독 (application / infra)
-       ▼
-Listener (이메일 outbox / Kafka / 푸시 알림)
+```mermaid
+flowchart TD
+    AR["Aggregate Root<br/>User / RefreshToken / VerificationToken"]
+    VO["Value Objects<br/>Email / PasswordHash / UserId / PhoneNumber"]
+    DE["Domain Events<br/>UserRegistered / UserEmailVerified / ..."]
+    L["Listener<br/>이메일 outbox / Kafka / 푸시 알림"]
+    Port["Repository (port)"]
+    Adapter["Adapter (JPA / MyBatis)<br/>— 도메인이 모르는 곳"]
 
-Repository (port) ← Adapter (JPA / MyBatis) — 도메인이 모르는 곳
+    AR -->|사용| VO
+    AR -->|raises| DE
+    DE -->|구독 application/infra| L
+    Port <-.implements.- Adapter
+
+    style AR fill:#fef3c7
+    style VO fill:#fef3c7
+    style DE fill:#fef3c7
+    style Port fill:#fef3c7
+    style Adapter fill:#dbeafe
 ```
 
 **도메인 layer 는**:
