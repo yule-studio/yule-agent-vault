@@ -382,6 +382,8 @@ com.example.shop
 | [[signup/signup]]         | ✅ (folder split)   |
 | [[board/board]]           | ✅ (folder split)   |
 | [[product/product]]       | ✅ (folder split — PG + 디지털 + Kafka F10+)   |
+| [[notification/notification]] | ✅ (folder split — FCM/APNs/SES/WebPush)   |
+| [[chat/chat]]             | ✅ (folder split — 카톡 1:1/그룹/오픈채팅/멀티 디바이스)   |
 | [[email-verification]]    | ✅   |
 | [[oauth2-social-login]]   | ✅   |
 | [[two-factor-auth]]       | ✅   |
@@ -394,7 +396,7 @@ com.example.shop
 | [[webhook-send]]              | ✅   |
 | [[review]]                    | ✅   |
 | [[geo-search]]                | ✅   |
-| [[chat-realtime]]             | ✅   |
+| ~~[[chat-realtime]]~~         | 흡수됨 → chat/ |
 | [[feed-timeline]]             | ✅   |
 | [[recommendation]]            | ✅   |
 | [[excel-csv-import-export]]   | ✅   |
