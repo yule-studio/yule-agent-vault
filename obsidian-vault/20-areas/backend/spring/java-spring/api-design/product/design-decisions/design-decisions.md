@@ -43,6 +43,7 @@ tags:
 | 11 | **옵션 / SKU** | Variant 패턴 (상품 1 + N SKU) | [[option-strategy]] |
 | 12 | **통화 / 다국적** | KRW only (1단계) | [[currency-strategy]] |
 | 13 | **정산** | PG D+3 → 가맹점 D+5 | [[settlement-policy]] |
+| 14 | **Kafka 고도화** ★ | F10+ Outbox + Kafka (대용량 분산) | [[kafka-event-driven]] |
 
 ---
 
@@ -63,9 +64,14 @@ flowchart TD
     K --> E
     L[12. 통화] --> H
     M[9. 가격/할인] --> B
+
+    N[14. Kafka 고도화 ★] --> C
+    N --> J
+    N --> G
 ```
 
 → PG 선택 (1) 이 모든 결정의 root. PG 마다 webhook / 환불 / 정산 모델이 다름.
+→ Kafka (14) 는 F10+ 의 고도화 — 1~13 결정 위에서 비동기 / 분산 layer 만 변경.
 
 ---
 
