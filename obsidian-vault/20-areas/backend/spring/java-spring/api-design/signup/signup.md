@@ -21,9 +21,12 @@ tags:
 
 | 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
 | --- | --- | --- | --- |
-| v.3.0.0 | 2026-05-14 | engineering-agent/tech-lead | auth 통합 — login / email-verify / phone-verify / password-reset 흡수 + 권장 도구 가이드 |
-| v.2.0.0 | 2026-05-14 | engineering-agent/tech-lead | 폴더 split (12 detail) |
-| v.1.0.0 | 2026-05-14 | engineering-agent/tech-lead | 단일 파일 (deprecated) |
+| v4.2.0 | 2026-05-15 | engineering-agent/tech-lead | social-login-impl 흡수 + api-design duplicate 정리 (Minor — 새 흐름 추가) |
+| v4.0.1 | 2026-05-15 | engineering-agent/tech-lead | ASCII → mermaid 전환 (Patch — 의미 변화 X) |
+| v4.0.0 | 2026-05-15 | engineering-agent/tech-lead | Option A 폴더 8개 split (database / domain-model / design-decisions / security / testing / operations / pitfalls / implementation) — Major 구조 변경 |
+| v3.0.0 | 2026-05-14 | engineering-agent/tech-lead | auth 통합 — login / email-verify / phone-verify / password-reset 흡수 |
+| v2.0.0 | 2026-05-14 | engineering-agent/tech-lead | 폴더 split (12 detail) |
+| v1.0.0 | 2026-05-14 | engineering-agent/tech-lead | 최초 — 단일 파일 (deprecated) |
 
 **[[../api-design|↑ api-design hub]]**
 
@@ -77,17 +80,17 @@ flowchart LR
 
 ### Phase 3 — 기능별 구현
 
-| 순   | 노트                                              | 무엇                                       |
-| --- | ----------------------------------------------- | ---------------------------------------- |
-| 10  | [[implementation/implementation]]               | implementation hub (구현 순서) |
-| 11  | [[implementation/signup-impl]]                  | 회원가입 구현                                  |
-| 12  | [[implementation/email-verification-impl]]      | 이메일 인증                                   |
-| 13  | [[implementation/phone-verification-impl]]      | 휴대폰 인증 (한국 SaaS — AlimTalk / NCP SENS 등) |
-| 14  | [[implementation/login-impl]]                   | 로그인 (JWT access + refresh)               |
-| 15  | [[implementation/social-login-impl]]            | 소셜 로그인 (Apple / Google / Kakao / Naver)  |
-| 16  | [[implementation/token-refresh-impl]]           | 토큰 갱신 (rotation + reuse detection)       |
-| 17  | [[implementation/password-reset-impl]]          | 패스워드 리셋                                  |
-| 18  | [[implementation/email-verification-model]]     | (참고) URL token vs 6-digit 모델 비교         |
+| 순   | 노트                                          | 무엇                                       |
+| --- | ------------------------------------------- | ---------------------------------------- |
+| 10  | [[implementation/implementation]]           | implementation hub (구현 순서)               |
+| 11  | [[implementation/signup-impl]]              | 회원가입 구현                                  |
+| 12  | [[implementation/email-verification-impl]]  | 이메일 인증                                   |
+| 13  | [[implementation/phone-verification-impl]]  | 휴대폰 인증 (한국 SaaS — AlimTalk / NCP SENS 등) |
+| 14  | [[implementation/login-impl]]               | 로그인 (JWT access + refresh)               |
+| 15  | [[implementation/social-login-impl]]        | 소셜 로그인 (Apple / Google / Kakao / Naver)  |
+| 16  | [[implementation/token-refresh-impl]]       | 토큰 갱신 (rotation + reuse detection)       |
+| 17  | [[implementation/password-reset-impl]]      | 패스워드 리셋                                  |
+| 18  | [[implementation/email-verification-model]] | (참고) URL token vs 6-digit 모델 비교          |
 
 ### Phase 4 — 운영 품질
 
