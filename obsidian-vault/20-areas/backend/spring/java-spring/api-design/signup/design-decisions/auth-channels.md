@@ -237,25 +237,17 @@ auth-channels:
 
 ## 5. 구현 흐름 — 본 vault 의 default
 
-```
-[가입 시작]
-   ↓
-[휴대폰 인증]
-   POST /auth/verify/phone/request   { phone: "010-0000-0000" }
-   → SMS / AlimTalk 발송 (NCP SENS / Kakao)
-   ↓
-[코드 입력]
-   POST /auth/verify/phone/confirm   { phone, code }
-   → phoneAuthToken 발급 (TTL 10분)
-   ↓
-[회원가입]
-   POST /auth/signup   { email, password, name, phoneAuthToken, ... }
-   → user INSERT (status=PENDING_VERIFICATION, phoneVerifiedAt=now)
-   → 이메일 인증 메일 발송
-   ↓
-[이메일 클릭]
-   GET /auth/verify/email?token=...
-   → user.status = ACTIVE
+```mermaid
+flowchart TD
+    Start[가입 시작] --> Phone["휴대폰 인증<br/>POST /auth/verify/phone/request"]
+    Phone -->|SMS / AlimTalk 발송| Code["코드 입력<br/>POST /auth/verify/phone/confirm"]
+    Code -->|phoneAuthToken 발급 TTL 10분| Signup["회원가입<br/>POST /auth/signup"]
+    Signup -->|user INSERT<br/>status=PENDING_VERIFICATION| EmailSent[이메일 인증 메일 발송]
+    EmailSent --> Click["이메일 클릭<br/>GET /auth/verify/email?token=..."]
+    Click --> Active[user.status = ACTIVE]
+
+    style Start fill:#fef3c7
+    style Active fill:#d1fae5
 ```
 
 자세히: [[../phone-verification-impl]] · [[../email-verification-impl]] · [[../signup-impl]].

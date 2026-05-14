@@ -43,22 +43,20 @@ tags:
 
 ## 2. 구현 순서 (의존성)
 
-```
-1. domain (VO + Aggregate)         [[../domain-model]]
-   ↓
-2. DB schema (Flyway)              [[../database]]
-   ↓
-3. signup-impl                     [[signup-impl]]
-   ↓
-4. email-verification-impl         [[email-verification-impl]]
-   ↓
-5. login-impl                      [[login-impl]]
-   ↓
-6. token-refresh-impl              [[token-refresh-impl]]
-   ↓
-7. phone-verification-impl         [[phone-verification-impl]]
-   ↓
-8. password-reset-impl             [[password-reset-impl]]
+```mermaid
+flowchart TD
+    D1[1. domain<br/>VO + Aggregate] --> D2[2. DB schema<br/>Flyway]
+    D2 --> D3[3. signup-impl]
+    D3 --> D4[4. email-verification-impl]
+    D4 --> D5[5. login-impl]
+    D5 --> D6[6. token-refresh-impl]
+    D5 --> D7[7. phone-verification-impl]
+    D5 --> D8[8. password-reset-impl]
+
+    style D1 fill:#fef3c7
+    style D2 fill:#fef3c7
+    style D3 fill:#dbeafe
+    style D5 fill:#dbeafe
 ```
 
 **왜 이 순서**
@@ -77,29 +75,21 @@ tags:
 
 ### 3.1 Controller → UseCase → Domain + Repository
 
-```
-[Controller]
-  - HTTP I/O
-  - DTO 검증 (Bean Validation)
-  - UseCase 호출
-  - 응답 변환
+```mermaid
+flowchart TD
+    Ctl["Controller<br/>HTTP I/O / DTO 검증 (Bean Validation)<br/>UseCase 호출 / 응답 변환"]
+    UC["UseCase (@Service)<br/>비즈니스 흐름 조정<br/>@Transactional 경계<br/>도메인 검증 / Event publish"]
+    Dom["Domain<br/>pure java / invariant 강제<br/>상태 전이 / DomainEvent 발행"]
+    Port["Repository Port<br/>인터페이스 = 도메인"]
+    Adapter["Adapter<br/>구현 = infrastructure"]
 
-[UseCase] (@Service)
-  - 비즈니스 흐름 조정
-  - @Transactional 경계
-  - 도메인 검증 (PasswordPolicy 등)
-  - 도메인 객체 호출
-  - Event publish
+    Ctl --> UC
+    UC --> Dom
+    Dom --> Port
+    Port <-.implements.- Adapter
 
-[Domain]
-  - pure java
-  - invariant 강제
-  - 상태 전이
-  - DomainEvent 발행
-
-[Repository Port → Adapter]
-  - 인터페이스는 도메인에
-  - 구현은 infrastructure
+    style Dom fill:#fef3c7
+    style Adapter fill:#dbeafe
 ```
 
 자세히: [[../architecture]] · [[../domain-model]].
@@ -117,17 +107,24 @@ tags:
 
 ### 3.3 도메인 이벤트 + AFTER_COMMIT listener
 
-```
-[UseCase]
-  @Transactional
-  - 비즈니스 로직 + DB save
-  - eventPublisher.publishEvent(new XxxEvent(...))
-   ↓ COMMIT
+```mermaid
+sequenceDiagram
+    participant UC as UseCase
+    participant DB
+    participant L as Listener
 
-[Listener] (@TransactionalEventListener(phase = AFTER_COMMIT))
-  - outbox INSERT (별도 트랜잭션)
-  - 메트릭
-  - 로그
+    rect rgb(254, 243, 199)
+    note over UC: @Transactional
+    UC->>DB: 비즈니스 로직 + DB save
+    UC->>UC: eventPublisher.publishEvent(new XxxEvent(...))
+    DB-->>UC: COMMIT
+    end
+
+    rect rgb(219, 234, 254)
+    note over L: @TransactionalEventListener(AFTER_COMMIT)
+    L->>DB: outbox INSERT (별도 트랜잭션)
+    L->>L: 메트릭 / 로그
+    end
 ```
 
 **왜 이 패턴**

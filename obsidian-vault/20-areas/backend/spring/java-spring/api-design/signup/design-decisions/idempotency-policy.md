@@ -35,43 +35,42 @@ tags:
 
 ## 2. 왜 필요한가
 
-### 2.1 시나리오
+### 2.1 시나리오 (문제)
 
-```
-[클라]
-  POST /payment  { orderId: "x", amount: 10000 }
-   ↓
-[네트워크 지연 / timeout]
-   ↓
-[클라]
-  네트워크 에러? → 재시도
-  POST /payment  { orderId: "x", amount: 10000 }   ← 중복 결제 위험
-```
+```mermaid
+sequenceDiagram
+    actor C as 클라
+    participant S as Server
 
-**문제**
-- 첫 요청은 서버 처리 완료 (결제 OK) 했는데 응답이 클라에 도달 안 함.
-- 클라가 재시도 → 두 번째 결제 발생 → 사용자 10,000 × 2 = 20,000 원 차감.
+    C->>S: POST /payment { orderId: "x", amount: 10000 }
+    S->>S: 결제 처리 ✅
+    note over C,S: 네트워크 지연 / timeout<br/>응답 도달 X
+    C->>C: 네트워크 에러? → 재시도
+    C->>S: POST /payment { orderId: "x", amount: 10000 }
+    S->>S: 결제 처리 ✅ (중복!)
+    note over C: 💸 20,000원 차감 (10,000 × 2)
+```
 
 ### 2.2 Idempotency-Key 의 해결
 
-```
-[클라]
-  POST /payment
-  Idempotency-Key: 01HQXY-AB-1234
-  { orderId: "x", amount: 10000 }
-   ↓
-[서버 첫 요청]
-  - DB: Idempotency-Key 저장 (status=PROCESSING)
-  - 결제 처리
-  - DB: 결과 저장 (status=COMPLETED, response={...})
-   ↓
-[클라 재시도, 같은 Key]
-  POST /payment
-  Idempotency-Key: 01HQXY-AB-1234
-   ↓
-[서버]
-  - DB lookup → 이미 COMPLETED
-  - 저장된 response 그대로 반환 (재실행 X)
+```mermaid
+sequenceDiagram
+    actor C as 클라
+    participant S as Server
+    participant DB
+
+    C->>S: POST /payment + Idempotency-Key: 01HQXY-AB-1234
+    S->>DB: Idempotency-Key 저장 (status=PROCESSING)
+    S->>S: 결제 처리
+    S->>DB: status=COMPLETED, response={...}
+    S-->>C: 응답 (네트워크 실패)
+
+    C->>S: 재시도 — 같은 Key
+    S->>DB: Idempotency-Key lookup
+    DB-->>S: status=COMPLETED, response={...}
+    S-->>C: 저장된 response 그대로 (재실행 X)
+
+    note over S: ✅ 같은 Key = 같은 결과
 ```
 
 → 같은 Key 의 요청은 같은 결과. 중복 처리 X.
@@ -247,20 +246,27 @@ Idempotency-Key: 01HQ-AB-1234-...
 
 ## 7. PROCESSING — 동시 retry
 
-```
-[클라 첫 요청 — Key=ABC]
-  서버: row INSERT (PROCESSING)
-  결제 처리 시작 (5초)
-   ↓ 1초 후
-[클라가 timeout 으로 재시도 — Key=ABC]
-  서버: row 발견 (PROCESSING)
-  → 409 Conflict "still processing" 응답
-   ↓ 5초 후
-[원래 요청 완료]
-  서버: row UPDATE (COMPLETED)
-   ↓
-[클라가 다시 retry — Key=ABC]
-  서버: COMPLETED 응답 반환 (cached)
+```mermaid
+sequenceDiagram
+    actor C as 클라
+    participant S as Server
+    participant DB
+
+    C->>S: 첫 요청 (Key=ABC)
+    S->>DB: INSERT (PROCESSING)
+    S->>S: 결제 처리 시작 (5초)
+
+    note over C,S: T+1초 — 클라 timeout retry
+    C->>S: 재시도 (Key=ABC)
+    S->>DB: row 발견 (PROCESSING)
+    S-->>C: 409 Conflict "still processing"
+
+    note over S: T+5초 — 원래 요청 완료
+    S->>DB: UPDATE (COMPLETED)
+
+    C->>S: 다시 retry (Key=ABC)
+    S->>DB: lookup → COMPLETED
+    S-->>C: 저장된 response (cached)
 ```
 
 **왜 PROCESSING 시 409**

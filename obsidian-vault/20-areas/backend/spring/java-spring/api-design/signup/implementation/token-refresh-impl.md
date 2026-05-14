@@ -28,37 +28,52 @@ tags:
 
 ### 1.1 정상 흐름 (rotation)
 
-```
-[클라가 보유한 RT_v1] ──→ POST /token/refresh
-                                ↓
-                  서버: hash 로 lookup
-                  current.status == ACTIVE ?
-                                ↓ Yes
-                  새 RT_v2 생성 + DB INSERT (ACTIVE)
-                  current.status = ROTATED
-                  current.rotatedToId = RT_v2.id
-                                ↓
-                          { access, RT_v2 raw } 응답
-                                ↓
-[클라가 보유한 RT_v2 만 유효]    [DB 의 RT_v1 은 ROTATED]
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as 클라 (RT_v1 보유)
+    participant API
+    participant DB as PostgreSQL
+
+    C->>API: POST /token/refresh { RT_v1 }
+    API->>DB: findByTokenHash(sha256(RT_v1))
+    DB-->>API: RefreshToken (status=ACTIVE)
+    API->>API: 새 RT_v2 생성
+    API->>DB: refresh_tokens INSERT RT_v2 (ACTIVE)
+    API->>DB: UPDATE RT_v1 (status=ROTATED, rotated_to_id=RT_v2.id)
+    API-->>C: { access, RT_v2 raw }
+
+    note over C: RT_v2 만 유효
+    note over DB: RT_v1 은 ROTATED 로 chain 추적
 ```
 
 ### 1.2 도난 흐름 (reuse detection)
 
-```
-공격자가 RT_v1 탈취 (XSS / 네트워크 / 디스크 dump)
-       ↓
-정상 user 가 RT_v1 사용 → RT_v2 발급 (RT_v1 → ROTATED)
-       ↓
-공격자가 탈취한 RT_v1 또 사용 시도
-       ↓
-서버: RT_v1 lookup → status == ROTATED 발견
-       ↓
-🚨 reuse detected — user 의 모든 RT REVOKE
-       ↓
-정상 user 의 RT_v2 도 죽음 → 강제 재로그인 (안전 우선)
-       ↓
-사용자에 알림: "새 위치에서 로그인 시도 감지"
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as 정상 user
+    actor A as 공격자 (RT_v1 탈취)
+    participant API
+    participant DB
+    participant Notifier as 알림
+
+    note over A: T1 — RT_v1 탈취<br/>(XSS / 네트워크 / 디스크 dump)
+
+    U->>API: POST /refresh { RT_v1 }
+    API->>DB: rotate — RT_v1 → ROTATED, RT_v2 발급
+    API-->>U: { access, RT_v2 }
+
+    A->>API: POST /refresh { RT_v1 }  (탈취 RT 재사용)
+    API->>DB: findByTokenHash → status=ROTATED 발견
+    note over API: 🚨 reuse detected
+    API->>DB: revokeAllForUser (모든 RT)
+    API->>Notifier: 사용자에 도난 알림
+    API-->>A: 401 token reuse detected
+
+    note over U: RT_v2 도 죽음<br/>강제 재로그인 (안전 우선)
+    U->>API: POST /refresh { RT_v2 } (다음 요청)
+    API-->>U: 401 — 재로그인 필요
 ```
 
 ---

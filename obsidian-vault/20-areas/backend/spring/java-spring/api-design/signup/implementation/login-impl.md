@@ -26,23 +26,43 @@ tags:
 
 ## 1. 흐름 개요
 
-```
-[클라]
-  POST /api/v1/auth/login   { email, password }
-   ↓
-[LoginController]
-  Bean Validation → LoginUseCase
-   ↓
-[LoginUseCase] @Transactional
-  1. Rate limit 검사 (IP+email)
-  2. user lookup — 없어도 dummy hash 검증 (timing 균일화)
-  3. password 검증
-  4. status 검증 (ACTIVE 만)
-  5. 실패 → rate limit recordFailure
-  6. 성공 → JWT 발급 + Refresh INSERT
-   ↓
-[응답]
-  { accessToken, refreshToken, expiresIn }
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as 클라이언트
+    participant Ctl as LoginController
+    participant UC as LoginUseCase
+    participant Limiter as RateLimiter (Redis)
+    participant DB as PostgreSQL
+    participant Enc as PasswordEncoder
+
+    C->>Ctl: POST /auth/login { email, password }
+    Ctl->>Ctl: Bean Validation
+    Ctl->>UC: handle(cmd)
+
+    rect rgb(254, 243, 199)
+    note over UC: @Transactional
+    UC->>Limiter: checkLimit(IP+email)
+    UC->>DB: findByEmail
+    alt user 없음
+        UC->>Enc: matches(rawPw, DUMMY_HASH)
+        note right of Enc: timing 균일화 (200ms)
+        UC->>Limiter: recordFailure
+        UC-->>Ctl: 401 invalid email or password
+    else password 틀림
+        UC->>Enc: matches(rawPw, user.hash)
+        UC->>Limiter: recordFailure
+        UC-->>Ctl: 401 invalid email or password
+    else status ≠ ACTIVE
+        UC-->>Ctl: 403 활성 계정 아님
+    else 성공
+        UC->>Limiter: recordSuccess (counter 리셋)
+        UC->>UC: JWT access 발급 (15m)
+        UC->>DB: refresh_token INSERT
+    end
+    end
+
+    Ctl-->>C: { accessToken, refreshToken, expiresIn }
 ```
 
 ---

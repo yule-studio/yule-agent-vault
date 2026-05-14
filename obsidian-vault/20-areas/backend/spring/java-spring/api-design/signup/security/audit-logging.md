@@ -259,10 +259,8 @@ WHERE event_type IN ('PASSWORD_CHANGED', '2FA_ENABLED', 'ROLE_CHANGED')
 ```
 [Daily batch]
    SELECT * FROM auth_audit_log WHERE created_at < now() - INTERVAL '1 year'
-   ↓
-   parquet / gzip 파일로 S3 export
-   ↓
-   DB 삭제
+     → parquet / gzip 파일로 S3 export
+     → DB 삭제
 ```
 
 **왜**

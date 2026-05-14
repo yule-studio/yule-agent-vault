@@ -157,30 +157,35 @@ tags:
 
 ## 5. 흐름 — SMS 인증
 
-```
-[클라]
-  POST /auth/verify/phone/request   { phone: "010-0000-0000" }
-   ↓
-[서버]
-  - 정규화 (010-0000-0000 → 01000000000)
-  - 6자리 코드 생성 (random 100000-999999)
-  - Redis SET (key: phone:verify:01000000000, value: { codeHash, attempts: 0 }, TTL: 3m)
-  - NCP SENS API 호출 (SMS 발송)
-   ↓
-[사용자 휴대폰]
-  "[Yule] 인증번호 123456 (3분 유효)"
-   ↓
-[클라]
-  POST /auth/verify/phone/confirm   { phone: "010-0000-0000", code: "123456" }
-   ↓
-[서버]
-  - Redis GET → attempts++ → match
-  - 일치 시: phoneAuthToken 발급 (TTL 10m, signup 진행 동안)
-  - 불일치: attempts 5 → lock 30분
-   ↓
-[가입 시]
-  POST /auth/signup   { email, password, phoneAuthToken, ... }
-  - phoneAuthToken 검증 → users INSERT (phoneVerifiedAt=now)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant C as 클라
+    participant API as Backend
+    participant Redis
+    participant NCP as NCP SENS
+
+    C->>API: POST /verify/phone/request { phone: "010-0000-0000" }
+    API->>API: 정규화 → "01000000000"
+    API->>API: 6-digit code 생성 (100000-999999)
+    API->>Redis: SET phone:verify:01000000000 { codeHash, attempts: 0 } TTL 3m
+    API->>NCP: send("01000000000", "[Yule] 인증번호 123456")
+    NCP-->>U: SMS "[Yule] 인증번호 123456 (3분 유효)"
+
+    C->>API: POST /verify/phone/confirm { phone, code: "123456" }
+    API->>Redis: GET → attempts++ → match
+    alt 일치
+        API->>API: phoneAuthToken 발급 TTL 10m
+        API-->>C: { phoneAuthToken }
+    else 5회 실패
+        API-->>C: 423 lock 30분
+    end
+
+    C->>API: POST /signup { ..., phoneAuthToken }
+    API->>Redis: 검증
+    API->>API: users INSERT (phoneVerifiedAt=now)
+    API-->>C: 200 가입 완료
 ```
 
 자세히: [[../phone-verification-impl]].
@@ -189,29 +194,27 @@ tags:
 
 ## 6. 흐름 — 본인인증 (PASS)
 
-```
-[클라]
-  사용자 클릭 → "본인 인증 (PASS)"
-   ↓
-[서버]
-  POST /auth/identity-verification/init
-  → PASS 의 popup URL + transaction_id 반환
-   ↓
-[클라]
-  PASS popup 열림 (PASS 앱 / SMS 인증)
-   ↓
-[PASS → 서버 callback]
-  POST /webhook/pass/result
-  → transaction_id + 실명 / 휴대폰 / 생년월일 / 성별 + 서명
-   ↓
-[서버]
-  - 서명 검증
-  - DB 의 transaction_id status = VERIFIED
-  - 본인 정보 임시 저장
-   ↓
-[클라]
-  GET /auth/identity-verification/result?txId=...
-  → 가입 진행 (본인 정보 prefill)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant C as 클라
+    participant API as Backend
+    participant PASS
+
+    U->>C: 클릭 "본인 인증 (PASS)"
+    C->>API: POST /identity-verification/init
+    API-->>C: PASS popup URL + transaction_id
+
+    C->>PASS: popup 열기 (PASS 앱 / SMS 인증)
+    U->>PASS: 인증
+    PASS->>API: webhook POST /webhook/pass/result<br/>{ tx_id, 실명, 휴대폰, 생년월일, 성별, 서명 }
+
+    API->>API: 서명 검증
+    API->>API: DB tx status = VERIFIED + 임시 저장
+
+    C->>API: GET /identity-verification/result?txId=...
+    API-->>C: 본인 정보 (가입 진행 prefill)
 ```
 
 자세히 - 본인인증 레시피는 별도 (본 vault 외).

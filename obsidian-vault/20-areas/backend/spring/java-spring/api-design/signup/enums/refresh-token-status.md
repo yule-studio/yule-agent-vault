@@ -51,30 +51,45 @@ public enum RefreshTokenStatus {
 
 ### 2.1 일반 토큰 (USED) 과의 차이
 
-```
-[verification token]
-  ACTIVE → consume() → USED              (한 번 쓰고 끝)
+```mermaid
+flowchart LR
+    subgraph VT["verification token"]
+        V1[ACTIVE] -->|consume| V2[USED]
+        note1[한 번 쓰고 끝]
+    end
 
-[refresh token]
-  ACTIVE → rotate() → ROTATED            (한 번 쓰고 새 RT 발급)
-              ↓
-            new RT (ACTIVE)
+    subgraph RT["refresh token"]
+        R1[ACTIVE] -->|rotate| R2[ROTATED]
+        R2 -.->|연결| R3[new RT ACTIVE]
+        note2[한 번 쓰고 새 RT 발급<br/>chain 으로 이어짐]
+    end
+
+    style V2 fill:#d1fae5
+    style R2 fill:#fef3c7
+    style R3 fill:#dbeafe
 ```
 
 → verification 은 "끝", refresh 는 "이어짐".
 
 ### 2.2 Reuse Detection — ROTATED 의 진짜 목적
 
-```
-공격자가 RT_v1 탈취
-       ↓
-정상 user 가 RT_v1 사용 → ACTIVE → ROTATED, 새 RT_v2 발급
-       ↓
-공격자가 탈취한 RT_v1 시도
-       ↓
-서버: 발견 — RT_v1.status = ROTATED  ← "reuse 감지!"
-       ↓
-🚨 모든 user 의 RT REVOKE (도난 의심)
+```mermaid
+sequenceDiagram
+    actor A as 공격자
+    actor U as 정상 user
+    participant S as Server
+
+    note over A: T1 — RT_v1 탈취
+
+    U->>S: refresh(RT_v1)
+    S->>S: RT_v1 ACTIVE → ROTATED<br/>새 RT_v2 발급
+    S-->>U: RT_v2
+
+    A->>S: refresh(RT_v1) (탈취 RT 시도)
+    S->>S: RT_v1.status = ROTATED 발견
+    note over S: 🚨 reuse 감지!
+    S->>S: 모든 user 의 RT REVOKE
+    S-->>A: 401
 ```
 
 → 만약 RT_v1.status 가 그냥 USED 였다면 정상 사용인지 도난인지 구분 불가. **ROTATED** 상태가 "이미 다음으로 넘어갔다" 표시.

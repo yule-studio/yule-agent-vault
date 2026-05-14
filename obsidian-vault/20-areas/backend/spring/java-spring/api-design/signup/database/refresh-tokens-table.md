@@ -284,12 +284,18 @@ CREATE INDEX ix_refresh_tokens_rotated_to ON refresh_tokens (rotated_to_id) WHER
 
 ## 3. Rotation Chain 추적
 
-```
-RT_v1 (ACTIVE) ──rotate──→ RT_v1 (ROTATED, rotated_to_id=RT_v2)
-                            ↓
-                           RT_v2 (ACTIVE) ──rotate──→ RT_v2 (ROTATED, rotated_to_id=RT_v3)
-                                                       ↓
-                                                      RT_v3 (ACTIVE)
+```mermaid
+flowchart LR
+    RT1["RT_v1<br/>(ACTIVE)"] -->|rotate| RT1R["RT_v1<br/>(ROTATED)<br/>rotated_to_id=RT_v2"]
+    RT1R -.chain.-> RT2["RT_v2<br/>(ACTIVE)"]
+    RT2 -->|rotate| RT2R["RT_v2<br/>(ROTATED)<br/>rotated_to_id=RT_v3"]
+    RT2R -.chain.-> RT3["RT_v3<br/>(ACTIVE)"]
+
+    style RT1 fill:#dbeafe
+    style RT1R fill:#fef3c7
+    style RT2 fill:#dbeafe
+    style RT2R fill:#fef3c7
+    style RT3 fill:#d1fae5
 ```
 
 ```sql

@@ -24,30 +24,52 @@ tags:
 
 ## 1. 흐름 개요
 
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as 클라이언트
+    participant Ctl as SignupController
+    participant UC as SignupUseCase
+    participant Policy as PasswordPolicy
+    participant DB as PostgreSQL
+    participant L as Listener
+    participant W as OutboxWorker
+    participant SES
+
+    C->>Ctl: POST /auth/signup { email, password, name, terms, ... }
+    Ctl->>Ctl: Bean Validation
+    Ctl->>UC: handle(SignupCommand)
+
+    rect rgb(254, 243, 199)
+    note over UC: @Transactional
+    UC->>Policy: validate(rawPassword)
+    UC->>UC: Email VO 생성 (정규화 trim + lower)
+    UC->>DB: existsByEmail (1차 검증)
+    UC->>UC: PasswordHash 생성 (Argon2id)
+    UC->>UC: User.register() — UserRegistered event
+    UC->>DB: users INSERT
+    note right of DB: UNIQUE 위반 시<br/>EmailAlreadyExistsException
+    UC->>DB: user_terms_consent_history INSERT (N)
+    UC->>UC: publishEvent(UserRegistered)
+    end
+    DB-->>UC: COMMIT
+
+    rect rgb(219, 234, 254)
+    note over L: AFTER_COMMIT
+    L->>DB: email_outbox INSERT (verification, link)
+    end
+
+    UC-->>Ctl: User
+    Ctl-->>C: 200 { userId, status=PENDING_VERIFICATION }
+
+    note over W,SES: 별도 프로세스
+    W->>DB: findPending
+    W->>SES: send("verification", { link })
+    SES-->>W: messageId
+    W->>DB: outbox status=SENT
 ```
-[클라]
-  POST /api/v1/auth/signup
-  { email, password, name, termsAgreed, marketingAgreed, ... }
-   ↓
-[Controller]
-  Bean Validation → SignupRequest → SignupCommand
-   ↓
-[SignupUseCase] @Transactional
-  1. PasswordPolicy.validate(rawPassword)
-  2. Email VO 생성 (정규화)
-  3. users.existsByEmail() — 1차 검증
-  4. PasswordHash 생성 (Argon2id)
-  5. User.register() — 도메인 객체 생성 (status=PENDING_VERIFICATION, UserRegistered event)
-  6. users.save() — DB INSERT (UNIQUE 위반 시 EmailAlreadyExistsException)
-  7. UserTermsConsentService.save() — 약관 동의 history
-  8. publishEvent(UserRegistered)
-   ↓ COMMIT
-[Listener] @AFTER_COMMIT
-  email_outbox.enqueue("verification", payload={ link })
-   ↓
-[OutboxWorker] — 별도 프로세스
-  SES.send(...) → user 메일함
-```
+
+자세히: [[../transactions]] · [[../database/email-outbox-table]].
 
 자세히: [[../transactions]] · [[../database/email-outbox-table]].
 

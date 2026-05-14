@@ -105,32 +105,38 @@ tags:
 
 ## 4. OAuth2 / OIDC 흐름
 
-```
-[클라]
-  Click "Login with Kakao"
-   ↓
-[Kakao OAuth]
-  user authorizes
-   ↓
-[클라]
-  redirect_uri 로 돌아옴 + authorization_code
-   ↓
-[서버]
-  POST kakao.com/oauth/token  { code, client_id, secret }
-  ← { access_token, refresh_token, id_token }
-   ↓
-[서버]
-  GET kakao.com/v2/user/me  Bearer <access_token>
-  ← { id, email, name, ... }
-   ↓
-[서버]
-  users.findByProviderAndExternalId(KAKAO, id)
-  if not found: INSERT new user (provider=KAKAO, external_id=id, email=email)
-  if found: return user
-   ↓
-[서버]
-  JWT 발급 + refresh INSERT
-  ← { accessJwt, refreshToken }
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant C as 클라
+    participant Kakao as Kakao OAuth
+    participant API as Backend
+    participant DB
+
+    U->>C: Click "Login with Kakao"
+    C->>Kakao: redirect (client_id, redirect_uri)
+    Kakao->>U: 동의 화면
+    U->>Kakao: authorize
+    Kakao-->>C: redirect_uri + authorization_code
+
+    C->>API: { code }
+    API->>Kakao: POST /oauth/token { code, client_id, secret }
+    Kakao-->>API: { access_token, refresh_token, id_token }
+
+    API->>Kakao: GET /v2/user/me (Bearer access_token)
+    Kakao-->>API: { id, email, name, ... }
+
+    API->>DB: findByProviderAndExternalId(KAKAO, id)
+    alt 신규
+        API->>DB: INSERT user (provider=KAKAO, external_id, email)
+    else 기존
+        DB-->>API: User
+    end
+
+    API->>API: JWT 발급
+    API->>DB: refresh INSERT
+    API-->>C: { accessJwt, refreshToken }
 ```
 
 ---

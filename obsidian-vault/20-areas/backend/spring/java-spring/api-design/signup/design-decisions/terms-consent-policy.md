@@ -181,21 +181,15 @@ VALUES (?, 'privacy-policy', 'v2.0', '...', now() + INTERVAL '30 days', 'Y');
 
 ## 5. 14세 미만 — 법정대리인 동의 흐름
 
-```
-[가입 화면]
-  사용자가 생년월일 입력 → 만 14세 미만 감지
-   ↓
-[법정대리인 정보]
-  부모 / 보호자 이름 + 휴대폰
-   ↓
-[법정대리인 휴대폰 인증]
-  부모 휴대폰에 SMS — 동의 링크
-   ↓
-[법정대리인 약관 동의]
-  부모 명의로 약관 동의 (별도 row)
-   ↓
-[가입 완료]
-  user row INSERT (status=ACTIVE, parent_consent_id=?)
+```mermaid
+flowchart TD
+    A[가입 화면<br/>사용자가 생년월일 입력] -->|만 14세 미만 감지| B[법정대리인 정보<br/>부모/보호자 이름 + 휴대폰]
+    B --> C[법정대리인 휴대폰 인증<br/>부모 휴대폰 SMS — 동의 링크]
+    C --> D[법정대리인 약관 동의<br/>부모 명의 동의 별도 row]
+    D --> E[가입 완료<br/>user INSERT + parent_consent_id]
+
+    style A fill:#fef3c7
+    style E fill:#d1fae5
 ```
 
 **왜 필요**

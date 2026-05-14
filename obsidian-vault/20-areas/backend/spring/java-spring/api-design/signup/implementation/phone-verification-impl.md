@@ -25,13 +25,35 @@ tags:
 
 ## 1. 흐름 개요
 
-```
-POST /verify/phone/request   { phone }
-   ↓ SMS / AlimTalk 발송 (6-digit code)
-POST /verify/phone/confirm   { phone, code }
-   ↓ 통과 시 phoneAuthToken 발급 (10m TTL)
-[가입 / 비번 변경 / step-up] body 에 phoneAuthToken 포함
-   ↓ 서버: phoneAuthToken 검증 + 1회용 폐기
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant API
+    participant Redis
+    participant SMS as NCP SENS / AlimTalk
+
+    U->>API: POST /verify/phone/request { phone }
+    API->>API: 6-digit code 생성
+    API->>Redis: SET phone:verify:{phone} = { codeHash, attempts: 0 } TTL 3m
+    API->>SMS: send(phone, "인증번호 123456")
+    SMS-->>U: SMS 도착
+
+    U->>API: POST /verify/phone/confirm { phone, code }
+    API->>Redis: GET phone:verify:{phone}
+    API->>API: attempts++ / hash 비교
+    alt 5회 실패 또는 만료
+        API-->>U: 401 / 423
+    else 성공
+        API->>API: phoneAuthToken 발급
+        API->>Redis: SET phone:auth-token:{token} TTL 10m
+        API-->>U: { phoneAuthToken }
+    end
+
+    note over U: 가입 / 비번 변경 / step-up 시 사용
+    U->>API: POST /signup { ..., phoneAuthToken }
+    API->>Redis: 검증 + 1회용 폐기
+    API-->>U: 가입 완료
 ```
 
 ---

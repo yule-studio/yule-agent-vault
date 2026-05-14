@@ -24,21 +24,34 @@ tags:
 
 ## 1. 흐름 개요
 
-```
-[signup-impl] (UserRegistered event)
-   ↓ AFTER_COMMIT
-[EmailVerificationOutboxListener]
-  - token 발급 (256-bit base64url) + DB INSERT (hash)
-  - email_outbox INSERT (link payload)
-   ↓
-[EmailOutboxWorker — 별도 프로세스]
-  - SES.send(template, link)
-   ↓
-[user 메일함]
-  → 클릭 → 프론트가 /verify-email?token=...
-   ↓
-[ConfirmEmailVerificationController]
-  - token hash lookup → consume (USED 전이) → user.verifyEmail() (ACTIVE)
+```mermaid
+sequenceDiagram
+    autonumber
+    participant SU as signup-impl
+    participant L as Listener (AFTER_COMMIT)
+    participant DB as PostgreSQL
+    participant W as OutboxWorker
+    participant SES
+    actor U as User
+    participant API as ConfirmController
+
+    SU->>L: UserRegistered event
+    rect rgb(219, 234, 254)
+    note over L: AFTER_COMMIT
+    L->>L: token 발급 (256-bit base64url)
+    L->>DB: email_verification_tokens INSERT (hash)
+    L->>DB: email_outbox INSERT (link payload)
+    end
+
+    W->>DB: findPending
+    W->>SES: send("email-verification", { link })
+    SES-->>U: 메일 발송
+
+    U->>U: 클릭 → /verify-email?token=...
+    U->>API: POST /verify/email/confirm { token }
+    API->>DB: findByTokenHash → consume (USED 전이)
+    API->>DB: user.verifyEmail() → status=ACTIVE
+    API-->>U: 200 인증 완료
 ```
 
 ---
