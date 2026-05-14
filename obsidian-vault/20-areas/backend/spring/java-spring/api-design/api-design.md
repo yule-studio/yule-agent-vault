@@ -349,15 +349,15 @@ com.example.shop
 | [[rate-limiting]]         | ✅   |
 | [[distributed-lock]]      | ✅   |
 | [[cache-redis]]           | ✅   |
-| websocket-stomp           | 🟡  |
-| webhook-send              | 🟡  |
-| review                    | 🟡  |
-| geo-search                | 🟡  |
-| chat-realtime             | 🟡  |
-| feed-timeline             | 🟡  |
-| recommendation            | 🟡  |
-| excel-csv-import-export   | 🟡  |
-| elasticsearch-integration | 🟡  |
+| [[websocket-stomp]]           | ✅   |
+| [[webhook-send]]              | ✅   |
+| [[review]]                    | ✅   |
+| [[geo-search]]                | ✅   |
+| [[chat-realtime]]             | ✅   |
+| [[feed-timeline]]             | ✅   |
+| [[recommendation]]            | ✅   |
+| [[excel-csv-import-export]]   | ✅   |
+| [[elasticsearch-integration]] | ✅   |
 
 ---
 
