@@ -11,6 +11,7 @@
 | --- | --- | --- |
 | bash | [[bash/]] | `find` / `xargs` / 환경변수 조작 |
 | docker | [[docker/]] | Dockerfile / docker-compose 조각 |
+| git | [[git/git]] | diff / log / rebase / cherry-pick / bisect 등 상황별 |
 | github-actions | [[github-actions/]] | workflow yaml 조각 |
 | java | [[java/]] | Optional 활용 / Stream 패턴 / record |
 | python | [[python/]] | dataclass / async / typing |
