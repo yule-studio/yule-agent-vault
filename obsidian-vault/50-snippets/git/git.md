@@ -56,3 +56,4 @@ working dir   →  index (staged)  →  repository (commit)
 
 - [[../snippets|↑ 50-snippets]]
 - [[../../40-patterns/github-conventions/github-conventions]] — 브랜치 / 커밋 컨벤션
+- [[../../40-patterns/git-conflict/git-conflict]] — 충돌 대비 / 해결 패턴 (백업·머지용·해결용 브랜치 분리)
