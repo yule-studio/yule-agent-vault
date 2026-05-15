@@ -377,30 +377,77 @@ com.example.shop
 
 ## 6. 진행 상태
 
-| 레시피                       | 상태  |
-| ------------------------- | --- |
-| [[signup/signup]]         | ✅ (folder split)   |
-| [[board/board]]           | ✅ (folder split)   |
-| [[product/product]]       | ✅ (folder split — PG + 디지털 + Kafka F10+)   |
-| [[notification/notification]] | ✅ (folder split — FCM/APNs/SES/WebPush)   |
-| [[chat/chat]]             | ✅ (folder split — 카톡 1:1/그룹/오픈채팅/멀티 디바이스)   |
-| [[email-verification]]    | ✅   |
-| [[oauth2-social-login]]   | ✅   |
-| [[two-factor-auth]]       | ✅   |
-| [[rbac-permissions]]      | ✅   |
-| [[file-upload-s3]]        | ✅   |
-| [[rate-limiting]]         | ✅   |
-| [[distributed-lock]]      | ✅   |
-| [[cache-redis]]           | ✅   |
-| [[websocket-stomp]]           | ✅   |
-| [[webhook-send]]              | ✅   |
-| [[review]]                    | ✅   |
-| [[geo-search]]                | ✅   |
-| ~~[[chat-realtime]]~~         | 흡수됨 → chat/ |
-| [[feed-timeline]]             | ✅   |
-| [[recommendation]]            | ✅   |
-| [[excel-csv-import-export]]   | ✅   |
-| [[elasticsearch-integration]] | ✅   |
+> 레시피는 **분량 / 도메인 복잡도** 에 따라 두 형태로 관리한다.
+> - **6.1 폴더 분할** — 거대한 도메인. §0~§11 가 각 파일.
+> - **6.2 단일 파일** — 한 파일 (≤1000 줄) 로 충분한 횡단·기능 레시피. **카테고리별** 로 묶어 navigation 한다.
+
+### 6.1 폴더 분할 레시피 (대형 도메인)
+
+| 레시피 | 노트 | 비고 |
+| --- | --- | --- |
+| **회원가입** | [[signup/signup]] | argon2id + email-verification + password-reset 흡수 |
+| **게시판** | [[board/board]] | CRUD + 권한 + 첨부 + Soft Delete |
+| **상품 / 결제** | [[product/product]] | 디지털 + PG + Webhook + Kafka (F10+) |
+| **알림** | [[notification/notification]] | FCM / APNs / SES / WebPush 멀티 채널 |
+| **채팅** | [[chat/chat]] | 카톡 1:1 / 그룹 / 오픈채팅 / 멀티 디바이스 |
+
+### 6.2 단일 파일 레시피 (카테고리별)
+
+#### 6.2.1 인증 · 인가
+| 노트 | 한 줄 |
+| --- | --- |
+| [[two-factor-auth]] | 2FA / TOTP — Google Authenticator 호환 |
+| [[rbac-permissions]] | Role + Permission + `@PreAuthorize` 권한 모델 |
+
+#### 6.2.2 횡단 관심사
+| 노트 | 한 줄 |
+| --- | --- |
+| [[rate-limiting]] | Bucket4j + Redis — IP / user / endpoint 별 |
+
+#### 6.2.3 캐시 · 동시성
+| 노트 | 한 줄 |
+| --- | --- |
+| [[cache-redis]] | cache-aside / `@Cacheable` / stampede 방지 |
+| [[distributed-lock]] | Redisson 기반 분산 락 (재고 / 중복 처리) |
+
+#### 6.2.4 파일 · 미디어
+| 노트 | 한 줄 |
+| --- | --- |
+| [[file-upload-s3]] | S3 presigned URL + MIME / 크기 검증 |
+
+#### 6.2.5 실시간 · 외부 통합
+| 노트 | 한 줄 |
+| --- | --- |
+| [[websocket-stomp]] | WebSocket + STOMP — 채팅/알림 push |
+| [[webhook-send]] | 서명 (HMAC) + 재시도 + 멱등 보장 |
+
+#### 6.2.6 검색 · 위치
+| 노트 | 한 줄 |
+| --- | --- |
+| [[elasticsearch-integration]] | 색인 / 자동완성 / 한글 형태소 |
+| [[geo-search]] | 좌표 검색 / 반경 / Redis GEO vs PostGIS |
+
+#### 6.2.7 도메인 기능 / UX
+| 노트 | 한 줄 |
+| --- | --- |
+| [[feed-timeline]] | fan-out 전략 (push / pull / hybrid) |
+| [[recommendation]] | 협업 / 인기도 / 최근 본 상품 |
+| [[review]] | 평점 + 베스트 + 신고 + 익명 |
+
+#### 6.2.8 데이터 가져오기 · 내보내기
+| 노트 | 한 줄 |
+| --- | --- |
+| [[excel-csv-import-export]] | POI / OpenCSV — 대용량 streaming |
+
+### 6.3 미작성 / 흡수됨
+
+| 항목 | 상태 |
+| --- | --- |
+| `login-jwt` | 📝 계획 — Tier 1 (§2.1) 작성 예정 |
+| `password-reset` | ✅ 흡수 → [[signup/signup]] (signup/implementation/password-reset-impl) |
+| `email-verification` | ✅ 흡수 → [[signup/signup]] (signup/implementation/email-verification-*) |
+| `oauth2-social-login` | 📝 계획 — Tier 2 (§3.1) |
+| ~~`chat-realtime`~~ | ✅ 흡수 → [[chat/chat]] |
 
 ---
 
