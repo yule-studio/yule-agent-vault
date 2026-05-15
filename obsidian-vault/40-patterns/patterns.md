@@ -17,6 +17,7 @@
 | error-handling-patterns | [[error-handling-patterns/]] | Circuit Breaker / Retry / Bulkhead |
 | refactoring-patterns | [[refactoring-patterns/]] | Strangler Fig / Branch by Abstraction |
 | github-conventions | [[github-conventions/github-conventions]] | 이슈 6 종 / PR 템플릿 / 라벨 priority |
+| git-conflict | [[git-conflict/git-conflict]] | 백업 / 머지용·해결용 브랜치 분리 / 단계별 해결 / 예방 |
 | documentation-versioning | [[documentation-versioning]] | 문서 버전 (semver) — Major/Minor/Patch bump 규칙 |
 
 ## 파일명 컨벤션
