@@ -15,6 +15,7 @@ tags:
 | 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
 | --- | --- | --- | --- |
 | v.1.0.0 | 2026-05-14 | engineering-agent/tech-lead | 종합 토픽 인덱스 |
+| v.1.1.0 | 2026-05-18 | engineering-agent/tech-lead | DevOps 연결 토픽 3 추가 — container-networking / service-discovery / tcp-socket-ops-pitfalls |
 
 **[[../network|↑ network hub]]**
 
@@ -37,6 +38,9 @@ tags:
 | [[bufferbloat]] | Bufferbloat / BBR / AQM |
 | [[dns-load-balancing-anycast]] | DNS-level LB + Anycast |
 | [[consistent-hashing]] | 분산 시스템의 consistent hash |
+| [[container-networking]] | network namespace / veth / bridge / overlay (VXLAN) — 컨테이너 네트워킹의 OS 기초 |
+| [[service-discovery]] | DNS / sidecar / config 기반 service discovery 패턴 |
+| [[tcp-socket-ops-pitfalls]] | TIME_WAIT / SO_REUSEPORT / ephemeral port / SYN backlog / conntrack |
 
 ---
 
