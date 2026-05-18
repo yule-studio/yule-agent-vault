@@ -18,8 +18,11 @@ tags:
 | 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
 | --- | --- | --- | --- |
 | v.1.0.0 | 2026-05-13 | engineering-agent/tech-lead | 사전 수준 |
+| v.1.1.0 | 2026-05-18 | engineering-agent/tech-lead | SOLID / OOP 원칙은 별도 영역 [[../object-oriented-programming/object-oriented-programming]] 로 위임 |
 
 **[[../computer-science|↑ computer-science]]**
+
+> OOP 관련 깊이 (4 pillar / SOLID 상세 / coupling-cohesion / composition / anti-patterns / backend 적용) 는 [[../object-oriented-programming/object-oriented-programming]] 영역에서 다룬다. 본 hub 의 §2.4 SOLID 는 요약만 유지.
 
 ---
 
@@ -418,6 +421,7 @@ Fowler "Refactoring" 2판 (2018) 권위서.
 
 ## 15. 관련
 
+- [[../object-oriented-programming/object-oriented-programming]] — OOP 영역 (4 pillar / SOLID 상세 / coupling-cohesion / composition / anti-patterns / backend)
 - [[../design-patterns/design-patterns]] — GoF 등 구체 패턴
 - [[../distributed-systems/distributed-systems]] — 아키텍처
 - [[../../soft-skills/soft-skills|↑ soft-skills]] — 팀워크
