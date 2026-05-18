@@ -369,6 +369,8 @@ provider A → B 마이그레이션 시 다음 절차로 무중단 이행한다.
 - [[multi-region-networking]]
 - [[waf]]
 - [[../kubernetes/services-networking]]
+- [[../../computer-science/network/dns/dns|↗ CS — DNS hub]] — protocol / record / hierarchy
+- [[../../computer-science/network/topics/service-discovery|↗ CS — service discovery]] — DNS 기반 패턴의 위치
 - ExternalDNS — https://github.com/kubernetes-sigs/external-dns
 - cert-manager — https://cert-manager.io
 - Cloudflare docs — https://developers.cloudflare.com/dns
