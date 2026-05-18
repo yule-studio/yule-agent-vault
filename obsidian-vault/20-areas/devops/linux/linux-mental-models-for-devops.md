@@ -451,6 +451,9 @@ parent cgroup (cpu.weight = 100)
 - [[pitfalls]]
 - [[../docker/docker-mental-models]]
 - [[../kubernetes/kubernetes-mental-models]]
+- [[../../computer-science/network/topics/container-networking|↗ CS — container networking (veth / bridge / VXLAN)]] — network namespace 의 실제 활용
+- [[../../computer-science/network/tools/iptables-netfilter|↗ CS — iptables / netfilter]] — Linux packet filter
+- [[../../computer-science/network/topics/tcp-socket-ops-pitfalls|↗ CS — TCP socket 운영 pitfall]] — TIME_WAIT / ephemeral port / SYN backlog
 - Brendan Gregg — Systems Performance (2nd ed) — page cache, scheduler
 - man 7 namespaces, man 7 cgroups
 - kernel docs — `Documentation/admin-guide/cgroup-v2.rst`
