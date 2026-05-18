@@ -13,6 +13,7 @@ tags: [area, devops, networking-ops]
 **[[../devops|↑ devops]]**
 
 > 깊이 노트: [[dns-provider-architecture]] — DNS provider 선택의 cascade (CDN / LB / cert / WAF / GeoDNS).
+> CS 기초: [[../../computer-science/network/network|network hub]] — DNS / TCP / HTTP / TLS / routing / iptables 의 protocol·OS 레벨 정의. DevOps 운영의 모든 네트워크 결정이 여기서 파생.
 
 ---
 
