@@ -13,8 +13,11 @@ tags: [devops, kubernetes, k8s, hub]
 | 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
 | --- | --- | --- | --- |
 | v1.0.0 | 2026-05-15 | engineering-agent/tech-lead | 최초 — hub + concepts + 실습 |
+| v1.1.0 | 2026-05-18 | engineering-agent/tech-lead | [[kubernetes-mental-models]] 깊이 노트 link |
 
 **[[../devops|↑ devops]]**
+
+> 깊이 노트: [[kubernetes-mental-models]] — declarative API, control loop, scheduler, operator, admission.
 
 ---
 
