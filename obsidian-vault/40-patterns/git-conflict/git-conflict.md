@@ -48,13 +48,13 @@ tags:
 
 ## 2. 언제 어떤 패턴
 
-| 상황 | 패턴 |
-| --- | --- |
-| 충돌이 날 것 같다 / 위험한 머지 | [[pattern-backup-branch]] |
-| 충돌이 났고, 해결을 별도 PR 로 분리하고 싶다 | [[pattern-merge-resolution-split]] |
-| 충돌 해결 자체의 단계가 헷갈린다 | [[pattern-conflict-resolution-flow]] |
-| 충돌이 파일 100+ / 너무 크다 | [[pattern-large-conflict-split]] |
-| 매번 같은 충돌이 반복된다 / 자주 다시 충돌난다 | [[pattern-conflict-prevention]] |
+| 상황                          | 패턴                                   |
+| --------------------------- | ------------------------------------ |
+| 충돌이 날 것 같다 / 위험한 머지         | [[pattern-backup-branch]]            |
+| 충돌이 났고, 해결을 별도 PR 로 분리하고 싶다 | [[pattern-merge-resolution-split]]   |
+| 충돌 해결 자체의 단계가 헷갈린다          | [[pattern-conflict-resolution-flow]] |
+| 충돌이 파일 100+ / 너무 크다         | [[pattern-large-conflict-split]]     |
+| 매번 같은 충돌이 반복된다 / 자주 다시 충돌난다 | [[pattern-conflict-prevention]]      |
 
 ---
 

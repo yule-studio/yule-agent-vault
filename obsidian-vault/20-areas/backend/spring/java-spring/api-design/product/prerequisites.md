@@ -27,18 +27,18 @@ tags:
 
 ## 1. 기술 전제 (코드)
 
-| 항목 | 버전 / 도구 | 비고 |
-| --- | --- | --- |
-| Java | 21 LTS | virtual thread 사용 검토 |
-| Spring Boot | 3.3.x | |
-| PostgreSQL | 16 | JSONB / partial index 활용 |
-| Redis | 7 | 재고 캐시 / 분산락 / idempotency |
-| 분산 락 | Redisson | [[../distributed-lock]] |
-| Auth | signup recipe | [[../signup/security/security]] |
-| 이미지 / 파일 | S3 + CloudFront | [[../file-upload-s3]] |
-| 결제 | PG SDK + REST | [[design-decisions/pg-selection]] |
-| 디지털 책 | Google Drive API + PDFBox | [[implementation/digital-delivery-impl]] |
-| 이메일 / push | SES + FCM/APNs | signup outbox 패턴 |
+| 항목          | 버전 / 도구                   | 비고                                       |
+| ----------- | ------------------------- | ---------------------------------------- |
+| Java        | 21 LTS                    | virtual thread 사용 검토                     |
+| Spring Boot | 3.3.x                     |                                          |
+| PostgreSQL  | 16                        | JSONB / partial index 활용                 |
+| Redis       | 7                         | 재고 캐시 / 분산락 / idempotency                |
+| 분산 락        | Redisson                  | [[../distributed-lock]]                  |
+| Auth        | signup recipe             | [[../signup/security/security]]          |
+| 이미지 / 파일    | S3 + CloudFront           | [[../file-upload-s3]]                    |
+| 결제          | PG SDK + REST             | [[design-decisions/pg-selection]]        |
+| 디지털 책       | Google Drive API + PDFBox | [[implementation/digital-delivery-impl]] |
+| 이메일 / push  | SES + FCM/APNs            | signup outbox 패턴                         |
 
 ### 1.1 왜 PostgreSQL (MySQL 아님)
 
@@ -55,16 +55,16 @@ tags:
 
 ## 2. PG 계약 / 사업자 (비기술)
 
-| 항목 | 한국 | 비고 |
-| --- | --- | --- |
-| 사업자등록증 | 필수 | 통신판매업 신고 추가 |
-| PG 가맹 | Toss / KCP / 이니시스 / 카카오페이 / 네이버페이 중 선택 | [[design-decisions/pg-selection]] |
-| 정산 계좌 | 사업자 명의 계좌 | KYC 검증 1주 |
-| PCI-DSS | PG 가 보호 (서버는 카드번호 X) | [[security/pci-dss]] |
-| 부가세 | 10% (간이/일반) | [[design-decisions/tax-strategy]] |
-| 환불 정책 | 7일 이내 단순변심 (전자상거래법) | [[design-decisions/refund-policy]] |
-| 청약철회 | 디지털: 다운로드 전만 환불 | [[design-decisions/digital-delivery-policy]] |
-| 개인정보 | 결제 후 5년 보유 (전자상거래법) | [[security/pii-encryption]] |
+| 항목      | 한국                                     | 비고                                           |
+| ------- | -------------------------------------- | -------------------------------------------- |
+| 사업자등록증  | 필수                                     | 통신판매업 신고 추가                                  |
+| PG 가맹   | Toss / KCP / 이니시스 / 카카오페이 / 네이버페이 중 선택 | [[design-decisions/pg-selection]]            |
+| 정산 계좌   | 사업자 명의 계좌                              | KYC 검증 1주                                    |
+| PCI-DSS | PG 가 보호 (서버는 카드번호 X)                   | [[security/pci-dss]]                         |
+| 부가세     | 10% (간이/일반)                            | [[design-decisions/tax-strategy]]            |
+| 환불 정책   | 7일 이내 단순변심 (전자상거래법)                    | [[design-decisions/refund-policy]]           |
+| 청약철회    | 디지털: 다운로드 전만 환불                        | [[design-decisions/digital-delivery-policy]] |
+| 개인정보    | 결제 후 5년 보유 (전자상거래법)                    | [[security/pii-encryption]]                  |
 
 ### 2.1 왜 사업자 + 통신판매업
 

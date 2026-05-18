@@ -47,14 +47,14 @@ related:
 
 본 영역은 다음 9 단계 lecture flow 로 구성된다. 각 단계가 별도 노트.
 
-| 단계 | 노트 | 강의 매핑 |
-| --- | --- | --- |
-| 1 | [[logging/fundamentals]] | §2-3 (로그 필요성 / 무엇을 / Level / 8 구성요소) |
-| 2 | [[logging/mdc-logging-filter]] | §3.11 (MDC + UUID + request id 부여 + Servlet Filter) |
-| 3 | [[logging/logback-configuration]] | §4 (Logback Appender / 파일 / 압축 / RollingFile) |
-| 4 | [[logging/elk-stack]] | §5-6 (Elasticsearch + Logstash + Kibana — Docker / 아키텍처 / 대시보드) |
-| 5 | [[monitoring/actuator-micrometer]] | §7 (Actuator endpoint + Micrometer + Prometheus expose) |
-| 6 | [[monitoring/prometheus-grafana]] | §8 (Prometheus 설치 + PromQL + Grafana 대시보드 + Discord Alert) |
+| 단계  | 노트                                 | 강의 매핑                                                           |
+| --- | ---------------------------------- | --------------------------------------------------------------- |
+| 1   | [[logging/fundamentals]]           | §2-3 (로그 필요성 / 무엇을 / Level / 8 구성요소)                            |
+| 2   | [[logging/mdc-logging-filter]]     | §3.11 (MDC + UUID + request id 부여 + Servlet Filter)             |
+| 3   | [[logging/logback-configuration]]  | §4 (Logback Appender / 파일 / 압축 / RollingFile)                   |
+| 4   | [[logging/elk-stack]]              | §5-6 (Elasticsearch + Logstash + Kibana — Docker / 아키텍처 / 대시보드) |
+| 5   | [[monitoring/actuator-micrometer]] | §7 (Actuator endpoint + Micrometer + Prometheus expose)         |
+| 6   | [[monitoring/prometheus-grafana]]  | §8 (Prometheus 설치 + PromQL + Grafana 대시보드 + Discord Alert)      |
 
 > 9 lecture = 6 노트 + sub-hub 2 (logging.md, monitoring.md) + 본 hub.
 
