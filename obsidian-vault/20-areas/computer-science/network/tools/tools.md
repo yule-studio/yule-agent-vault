@@ -15,6 +15,7 @@ tags:
 | 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
 | --- | --- | --- | --- |
 | v.1.0.0 | 2026-05-14 | engineering-agent/tech-lead | 도구 인벤토리 + 시나리오 매핑 |
+| v.1.1.0 | 2026-05-18 | engineering-agent/tech-lead | iptables/netfilter 추가 (Linux packet filter — Docker / kube-proxy / firewall 의 기반) |
 
 **[[../network|↑ network hub]]**
 
@@ -42,6 +43,7 @@ tags:
 | gRPC 디버깅 | grpcurl, ghz |
 | Load test | wrk, hey, k6, Locust |
 | RTT 측정 | hping, ping |
+| packet filter / NAT / firewall | iptables, nftables, conntrack |
 
 ---
 
@@ -55,6 +57,7 @@ tags:
 | [[iperf-load-testing]] | 대역 / 부하 |
 | [[ping-traceroute-mtr]] | 경로 / 지연 |
 | [[ss-netstat-tcp-tools]] | 소켓 / TCP 상태 |
+| [[iptables-netfilter]] | Linux packet filter / NAT / conntrack — Docker / kube-proxy / firewalld 의 기반 |
 
 ---
 
