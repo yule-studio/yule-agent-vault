@@ -13,10 +13,22 @@ tags: [devops, infra, hub]
 | 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
 | --- | --- | --- | --- |
 | v1.0.0 | 2026-05-15 | engineering-agent/tech-lead | 최초 — 13 영역 통합 hub |
+| v1.1.0 | 2026-05-18 | engineering-agent/tech-lead | senior 학습 가이드라인 + mental-model / provider-architecture 노트 link |
 
 **[[../areas|↑ areas]]**
 
 > "이 인프라 / 운영 영역 에 어떤 도구 를 언제 쓰나" — 의사결정 + 실습 통합.
+
+---
+
+## 0. 학습 가이드라인 / 깊이 노트
+
+- [[devops-senior-curriculum]] — 도메인 분류 / competency level / 산출물·검증 매트릭스 (공식 학습 가이드라인)
+- [[linux/linux-mental-models-for-devops]] — process / namespace / cgroup / page cache / scheduler
+- [[docker/docker-mental-models]] — container = process, layer, OCI, BuildKit
+- [[kubernetes/kubernetes-mental-models]] — declarative API, control loop, scheduler, operator
+- [[k3s/k3s-when-and-how]] — 적용 시나리오 / 효율 패턴 / 마이그레이션 임계
+- [[networking-ops/dns-provider-architecture]] — Cloudflare / Route53 / CoreDNS 의 cascade
 
 ---
 
