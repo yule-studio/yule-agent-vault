@@ -358,3 +358,5 @@ calicoctl node status
 - [[service-mesh]]
 - [[network-policy]]
 - [[../kubernetes/services-networking|↗ k8s services]]
+- [[../../computer-science/network/topics/container-networking|↗ CS — container networking (veth / bridge / VXLAN)]] — CNI 가 구현하는 OS 기본 단위
+- [[../../computer-science/network/tools/iptables-netfilter|↗ CS — iptables / netfilter]] — CNI 의 packet 처리 backend
