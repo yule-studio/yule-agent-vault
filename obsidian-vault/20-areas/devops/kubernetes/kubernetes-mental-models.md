@@ -446,6 +446,9 @@ client → authentication → authorization → mutating admission → validatio
 - [[pitfalls]]
 - [[../docker/docker-mental-models]]
 - [[../linux/linux-mental-models-for-devops]]
+- [[../../computer-science/network/topics/container-networking|↗ CS — container networking]] — pod 네트워크의 OS 기반
+- [[../../computer-science/network/topics/service-discovery|↗ CS — service discovery]] — Service / kube-proxy / CoreDNS 의 위치
+- [[../../computer-science/network/tools/iptables-netfilter|↗ CS — iptables / netfilter]] — kube-proxy iptables mode 의 실제 룰
 - Kelsey Hightower — kubernetes-the-hard-way
 - 공식 docs — https://kubernetes.io/docs/concepts/architecture/
 - controller-runtime — https://github.com/kubernetes-sigs/controller-runtime
