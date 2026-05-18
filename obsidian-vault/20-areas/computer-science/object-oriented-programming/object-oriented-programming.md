@@ -16,8 +16,13 @@ related:
   - "[[coupling-cohesion]]"
   - "[[anti-patterns]]"
   - "[[oop-for-backend]]"
+  - "[[tell-dont-ask-and-law-of-demeter]]"
+  - "[[value-objects]]"
+  - "[[ddd-tactical-patterns]]"
   - "[[../design-patterns/design-patterns]]"
   - "[[../software-engineering/software-engineering]]"
+  - "[[../../../40-patterns/architecture-patterns/architecture-patterns]]"
+  - "[[../../../40-patterns/refactoring-patterns/refactoring-patterns]]"
 ---
 
 # 객체지향 프로그래밍 (Object-Oriented Programming) — Hub
@@ -25,6 +30,7 @@ related:
 | 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
 | --- | --- | --- | --- |
 | v.1.0.0 | 2026-05-18 | engineering-agent/tech-lead | 최초 — OOP 영역 진입점 + 8 노트 인덱스 |
+| v.1.1.0 | 2026-05-19 | engineering-agent/tech-lead | 3 깊이 노트 추가 (tell-don't-ask / value-objects / ddd-tactical-patterns) + 40-patterns/architecture-patterns 영역 link |
 
 **[[../computer-science|↑ computer-science]]**
 
@@ -61,6 +67,11 @@ related:
 | [[coupling-cohesion]] | 결합도 6 단계 / 응집도 7 단계 + 측정 방법 |
 | [[anti-patterns]] | OOP anti-pattern 카탈로그 (God Object / Anemic / Feature Envy / 기타) + 리팩토링 방향 |
 | [[oop-for-backend]] | 백엔드 프레임워크 (Spring / Django / Rails) 에서 OOP 적용 |
+| [[tell-dont-ask-and-law-of-demeter]] | 두 통신 원칙 — 묻지 말고 시켜라 + 친구하고만 대화 + Hide Delegate |
+| [[value-objects]] | identity 없는 immutable 도메인 객체 + primitive obsession 해소 |
+| [[ddd-tactical-patterns]] | Entity / VO / Aggregate / Repository / Domain Service / Domain Event / Factory |
+
+> 인접 영역 (재사용 설계 패턴): [[../../../40-patterns/architecture-patterns/architecture-patterns|↗ 40-patterns/architecture-patterns]] (Layered / Hexagonal / Clean), [[../../../40-patterns/refactoring-patterns/refactoring-patterns|↗ 40-patterns/refactoring-patterns]] (Replace Conditional with Polymorphism)
 
 ---
 
@@ -69,11 +80,15 @@ related:
 1. [[concepts]] — 용어와 4 pillar 의 정의를 확정한다.
 2. [[coupling-cohesion]] — OOP 의 모든 원칙이 결합/응집의 트레이드오프임을 이해한다.
 3. [[solid-principles]] — 5 원칙을 개별로 본다.
-4. [[composition-over-inheritance]] — inheritance 의 함정과 composition 의 대안을 본다.
-5. [[anti-patterns]] — 실제 코드에서 자주 나타나는 안티패턴을 식별한다.
-6. [[good-vs-bad-oop]] — 좋은 / 나쁜 OOP 를 동일 도메인의 코드로 비교한다.
-7. [[oop-for-backend]] — 프레임워크 안에서 위 원칙을 적용한다.
-8. [[../design-patterns/design-patterns]] — 구체적 패턴 카탈로그로 확장한다.
+4. [[tell-dont-ask-and-law-of-demeter]] — 객체 간 통신의 두 원칙으로 캡슐화를 강화한다.
+5. [[composition-over-inheritance]] — inheritance 의 함정과 composition 의 대안을 본다.
+6. [[value-objects]] — primitive obsession 해소 + immutable 도메인 표현.
+7. [[anti-patterns]] — 실제 코드에서 자주 나타나는 안티패턴을 식별한다.
+8. [[good-vs-bad-oop]] — 좋은 / 나쁜 OOP 를 동일 도메인의 코드로 비교한다.
+9. [[ddd-tactical-patterns]] — Aggregate 중심의 도메인 모델링으로 확장한다.
+10. [[oop-for-backend]] — 프레임워크 안에서 위 원칙을 적용한다.
+11. [[../../../40-patterns/architecture-patterns/architecture-patterns]] — Layered / Hexagonal / Clean 으로 application 구조화.
+12. [[../design-patterns/design-patterns]] — 구체적 패턴 카탈로그로 확장한다.
 
 ---
 
