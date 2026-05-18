@@ -359,5 +359,7 @@ Linux kernel (namespace / cgroup / capability)
 - [[security]]
 - [[pitfalls]]
 - [[../linux/linux-mental-models-for-devops]]
+- [[../../computer-science/network/topics/container-networking|↗ CS — container networking (veth / bridge / VXLAN)]] — Docker bridge 의 실제 구성
+- [[../../computer-science/network/tools/iptables-netfilter|↗ CS — iptables / netfilter]] — Docker 의 NAT / DOCKER chain
 - OCI Image Spec v1.1 — https://github.com/opencontainers/image-spec
 - OCI Runtime Spec v1.1 — https://github.com/opencontainers/runtime-spec
