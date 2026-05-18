@@ -12,6 +12,8 @@ tags: [area, devops, networking-ops]
 
 **[[../devops|↑ devops]]**
 
+> 깊이 노트: [[dns-provider-architecture]] — DNS provider 선택의 cascade (CDN / LB / cert / WAF / GeoDNS).
+
 ---
 
 ## 1. 영역
