@@ -12,6 +12,8 @@ tags: [area, devops, linux]
 
 **[[../devops|↑ devops]]**
 
+> 깊이 노트: [[linux-mental-models-for-devops]] — process / namespace / cgroup / page cache / scheduler.
+
 ---
 
 ## 1. 왜 필요
