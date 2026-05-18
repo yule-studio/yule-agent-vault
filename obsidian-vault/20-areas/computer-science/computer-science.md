@@ -15,6 +15,7 @@ tags:
 
 | 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
 | --- | --- | --- | --- |
+| v.3.1.0 | 2026-05-18 | engineering-agent/tech-lead | object-oriented-programming 영역 추가 (Tier 2) — 8 노트 |
 | v.3.0.0 | 2026-05-13 | engineering-agent/tech-lead | ✅ 13 영역 전체 사전 수준 본문화 완료 |
 | v.2.0.0 | 2026-05-13 | engineering-agent/tech-lead | 13 영역 확장 + algorithm 사전 완결 반영 |
 | v.1.0.0 | 2026-05-13 | engineering-agent/tech-lead | 최초 — 6 영역 |
@@ -44,6 +45,7 @@ tags:
 | 영역 | 진입점 | 상태 |
 | --- | --- | --- |
 | 🏗 **software-engineering** | [[software-engineering/software-engineering]] | ✅ **사전 완성** — SOLID/Clean Code/TDD/DDD |
+| 🧩 **object-oriented-programming** | [[object-oriented-programming/object-oriented-programming]] | ✅ **사전 완성** — 4 pillar/SOLID/coupling-cohesion/composition/anti-patterns/backend |
 | 🎨 **design-patterns** | [[design-patterns/design-patterns]] | ✅ **사전 완성** — GoF 23 + PoEAA + FP/Concurrent/MSA |
 | 🌐 **distributed-systems** | [[distributed-systems/distributed-systems]] | ✅ **사전 완성** — CAP/Consensus/CRDT/Saga |
 
