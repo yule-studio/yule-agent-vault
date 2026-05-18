@@ -16,12 +16,15 @@ tags:
 | 문서 버전 | 작성일 | 작성자 | 주요 변경 사항 |
 | --- | --- | --- | --- |
 | v.1.0.0 | 2026-05-14 | engineering-agent/tech-lead | hub — 배포 단위 / 코드 단위 / 데이터 패턴 / repo strategy |
+| v.1.1.0 | 2026-05-19 | engineering-agent/tech-lead | [[../../../40-patterns/architecture-patterns/architecture-patterns|↗ 40-patterns/architecture-patterns]] (Layered/Hexagonal/Clean) link |
 
 **[[../backend|↑ backend]]**
 
 > 이 폴더는 **framework / 언어 무관 아키텍처 결정 문서**.
 > "Spring 어떻게 쓰지" 는 [[../spring/spring|↗ spring hub]], "어떤 DB 쓰지" 는 [[../../database/database|↗ database hub]].
 > 여기는 **시스템 전체를 어떻게 자르나** — 모놀리식 / MSA / 모노레포 / 통신 / 데이터 일관성.
+
+> 한 application 내부 구조 (Layered / Hexagonal / Clean) 는 [[../../../40-patterns/architecture-patterns/architecture-patterns|↗ 40-patterns/architecture-patterns]] 영역. 본 hub 는 시스템 수준 분리만 다룬다.
 
 ---
 
