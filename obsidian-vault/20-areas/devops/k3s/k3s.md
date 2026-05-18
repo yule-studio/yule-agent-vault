@@ -12,6 +12,8 @@ tags: [area, devops, k3s, kubernetes]
 
 **[[../devops|↑ devops]]**
 
+> 깊이 노트: [[k3s-when-and-how]] — 적용 시나리오 / 토폴로지 결정 / 마이그레이션 임계.
+
 ---
 
 ## 1. 왜 k3s
@@ -87,16 +89,16 @@ tags: [area, devops, k3s, kubernetes]
 
 ## 6. k3s ecosystem
 
-| | 무엇 |
-| --- | --- |
-| **k3s** | Lightweight k8s distribution |
-| **k3d** | k3s in Docker (다중 cluster dev) |
-| **k3sup** | k3s 설치 자동화 (Go binary) |
-| **k3os** | k8s 만 위한 immutable OS |
-| **Rancher** | k3s 의 enterprise management |
-| **Fleet** | Rancher 의 GitOps |
-| **autok3s** | cloud (AWS/Aliyun) 에 k3s 자동 배포 |
-| **Harvester** | HCI (k3s + KubeVirt) |
+|               | 무엇                             |
+| ------------- | ------------------------------ |
+| **k3s**       | Lightweight k8s distribution   |
+| **k3d**       | k3s in Docker (다중 cluster dev) |
+| **k3sup**     | k3s 설치 자동화 (Go binary)         |
+| **k3os**      | k8s 만 위한 immutable OS          |
+| **Rancher**   | k3s 의 enterprise management    |
+| **Fleet**     | Rancher 의 GitOps               |
+| **autok3s**   | cloud (AWS/Aliyun) 에 k3s 자동 배포 |
+| **Harvester** | HCI (k3s + KubeVirt)           |
 
 ---
 
